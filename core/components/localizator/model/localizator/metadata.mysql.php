@@ -5,5 +5,6 @@ $xpdo_meta_map = array (
   array (
     0 => 'localizatorLanguage',
     1 => 'localizatorContent',
+    2 => 'locTemplateVarResource',
   ),
 );

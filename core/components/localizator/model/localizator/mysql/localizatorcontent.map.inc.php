@@ -4,6 +4,10 @@ $xpdo_meta_map['localizatorContent']= array (
   'version' => '1.1',
   'table' => 'localizator_content',
   'extends' => 'xPDOSimpleObject',
+  'tableMeta' => 
+  array (
+    'engine' => 'MyISAM',
+  ),
   'fields' => 
   array (
     'resource_id' => 0,
@@ -80,14 +84,14 @@ $xpdo_meta_map['localizatorContent']= array (
     'introtext' => 
     array (
       'dbtype' => 'text',
-      'phptype' => 'text',
+      'phptype' => 'string',
       'null' => true,
       'default' => '',
     ),
     'description' => 
     array (
       'dbtype' => 'text',
-      'phptype' => 'text',
+      'phptype' => 'string',
       'null' => true,
       'default' => '',
     ),
@@ -139,6 +143,17 @@ $xpdo_meta_map['localizatorContent']= array (
           'null' => false,
         ),
       ),
+    ),
+  ),
+  'aggregates' => 
+  array (
+    'Resource' => 
+    array (
+      'class' => 'modResource',
+      'local' => 'resource_id',
+      'foreign' => 'id',
+      'cardinality' => 'one',
+      'owner' => 'foreign',
     ),
   ),
 );

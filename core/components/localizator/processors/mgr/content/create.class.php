@@ -1,5 +1,7 @@
 <?php
 
+ini_set("display_errors",1);
+error_reporting(E_ALL);
 class localizatorContentCreateProcessor extends modObjectCreateProcessor
 {
     public $objectType = 'localizatorContent';
@@ -7,7 +9,16 @@ class localizatorContentCreateProcessor extends modObjectCreateProcessor
     public $languageTopics = array('localizator');
     //public $permission = 'create';
 
-
+    function __construct(modX & $modx,array $properties = array()) {
+        parent::__construct($modx, $properties);
+        $data = $this->getProperties();
+        foreach ($data as $key => $value){
+            if (strpos($key, 'tvlocalizator_') !== false){
+                $this->setProperty(substr($key, 14), $value);
+                $this->unsetProperty($key);
+            }
+        }
+    }
     /**
      * @return bool
      */
