@@ -88,12 +88,9 @@ class localizatorContent extends xPDOSimpleObject {
      */
     public static function _loadTVs(localizatorContent &$content)
     {
+        $c = $content->xpdo->call('localizatorContent', 'prepareTVListCriteria', array(&$content));
+
         $resource = $content->getOne('Resource');
-        $c = $content->xpdo->newQuery('modTemplateVar');
-        $c->innerJoin('modTemplateVarTemplate','tvtpl',array(
-            'tvtpl.tmplvarid = modTemplateVar.id',
-            'tvtpl.templateid' => $resource->get('template'),
-        ));
         $c->query['distinct'] = 'DISTINCT';
         $c->select($content->xpdo->getSelectColumns('modTemplateVar', 'modTemplateVar'));
         $c->select($content->xpdo->getSelectColumns('modTemplateVarTemplate', 'tvtpl', '', array('rank')));
@@ -109,7 +106,7 @@ class localizatorContent extends xPDOSimpleObject {
         if (!$content->isNew()) {
             $c->leftJoin('locTemplateVarResource','tvc',array(
                 'tvc.tmplvarid = modTemplateVar.id',
-                'tvc.contentid' => $resource->get('id'),
+                'tvc.contentid' => $content->get('resource_id'),
                 'tvc.key' => $content->get('key'),
             ));
         }
