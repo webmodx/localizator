@@ -10,9 +10,11 @@ $tmp = array(
         'description' => '',
         'events' => array(
             'OnDocFormPrerender' => array(),
-			'OnLoadWebDocument' => array(),
-			'OnPageNotFound' => array(),
-			'OnHandleRequest' => array(),
+            'OnHandleRequest' => array(),
+            'OnPageNotFound' => array(),
+            'OnLoadWebDocument' => array(),
+            'OnDocFormSave' => array(),
+            'OnEmptyTrash' => array(),
         )
     )
 );

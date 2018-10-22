@@ -116,64 +116,6 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
         });
     },
 
-
-
-    createItem: function (btn, e) {
-        var w = MODx.load({
-            xtype: 'localizator-content-window-create',
-            id: Ext.id(),
-            listeners: {
-                success: {
-                    fn: function () {
-                        this.refresh();
-                    }, scope: this
-                }
-            }
-        });
-        w.reset();
-        w.setValues({active: true});
-        w.show(e.target);
-    },
-
-    updateItem: function (btn, e, row) {
-        if (typeof(row) != 'undefined') {
-            this.menu.record = row.data;
-        }
-        else if (!this.menu.record) {
-            return false;
-        }
-        var id = this.menu.record.id;
-
-        MODx.Ajax.request({
-            url: this.config.url,
-            params: {
-                action: 'mgr/content/get',
-                id: id
-            },
-            listeners: {
-                success: {
-                    fn: function (r) {
-                        var w = MODx.load({
-                            xtype: 'localizator-content-window-update',
-                            id: Ext.id(),
-                            record: r,
-                            listeners: {
-                                success: {
-                                    fn: function () {
-                                        this.refresh();
-                                    }, scope: this
-                                }
-                            }
-                        });
-                        w.reset();
-                        w.setValues(r.object);
-                        w.show(e.target);
-                    }, scope: this
-                }
-            }
-        });
-    },
-
     removeItem: function () {
         var ids = this._getSelectedIds();
         if (!ids.length) {
@@ -283,7 +225,7 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
     getTopBar: function () {
         return [{
             text: '<i class="icon icon-globe"></i>&nbsp;' + _('localizator_add'),
-            handler: this.createItem,
+            handler: this.loadCreateWin,
             scope: this
         }, {
             text: '<i class="icon icon-language"></i>&nbsp;' + _('localizator_translate'),
@@ -349,276 +291,260 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
     _clearSearch: function () {
         this.getStore().baseParams.query = '';
         this.getBottomToolbar().changePage(1);
+    },  
+
+    loadCreateWin: function(btn,e) {
+        return this._loadWin(btn,e,0);
     },
+    loadUpdateWin: function(btn,e) {
+        if (typeof(row) != 'undefined') {
+            this.menu.record = row.data;
+        }
+        else if (!this.menu.record) {
+            return false;
+        }
+        var id = this.menu.record.id;
+        return this._loadWin(btn,e,id);
+    },
+    
+    _loadWin: function(btn,e, loc_id) {
+        var resource_id = this.config.resource_id;
+
+        var input_prefix = Ext.id(null,'inp_');
+
+        var win_xtype = 'modx-window-localizator-item-content';
+        this.windows[win_xtype] = null;
+        var action = 'mgr/fields';
+        var co_id = '';
+        var object_id = '';
+        this.loadWindow(btn,e,{
+    		url: localizator.config.connector_url
+            ,xtype: win_xtype
+            ,grid: this
+            ,action: action
+            ,baseParams : {
+                action: action,
+                resource_id : resource_id,
+                loc_id : loc_id,
+                input_prefix: input_prefix,
+	            object_id: object_id,
+	            co_id: co_id,
+                win_id: input_prefix + win_xtype
+            }
+        });
+    }
+
 });
 Ext.reg('localizator-grid-content', localizator.grid.Content);
 
-
-
-
-
-
-localizator.window.CreateContent = function (config) {
+MODx.window.UpdatLocalizatorItem = function(config) {
     config = config || {};
-    if (!config.id) {
-        config.id = 'localizator-content-window-create';
-    }
-    Ext.applyIf(config, {
-        title: _('localizator_item_create'),
-        width: 768,
-        autoHeight: true,
-        url: localizator.config.connector_url,
-        action: 'mgr/content/create',
-        fields: this.getFields(config),
-        keys: [{
-            key: Ext.EventObject.ENTER, shift: true, fn: function () {
-                this.submit()
-            }, scope: this
+    
+    Ext.applyIf(config,{
+        title:_('localizator_item_update')
+        ,id: 'modx-window-localizator-item-content'
+        ,width: '1000'
+		,closeAction: 'hide'
+        ,shadow: false
+        ,resizable: true
+        ,collapsible: true
+        ,maximizable: true
+        ,allowDrop: true
+        ,height: '600'
+        //,saveBtnText: _('done')
+        ,forceLayout: true
+        ,boxMaxHeight: '700'
+        ,autoScroll: true
+        ,buttons: [{
+            text: config.cancelBtnText || _('cancel')
+            ,scope: this
+            ,handler: this.cancel
+        },{
+            text: config.saveBtnText || _('done')
+            ,scope: this
+            ,handler: this.submit
         }]
+		,grid: null		
+        ,fields: []
     });
-    localizator.window.CreateContent.superclass.constructor.call(this, config);
+    MODx.window.UpdatLocalizatorItem.superclass.constructor.call(this,config);
+    this.options = config;
+    this.config = config;
 
-	this.on('show', function() {
-		this.setValues({ resource_id:MODx.request.id });
-		if(MODx.loadRTE !== 'undefined') {
-	      MODx.loadRTE((this.config.id || this.id) + '-content');
-	    }
-	}.bind(this));
+    //this.on('show',this.onShow,this);
+    this.on('hide',this.onHideWindow,this);
+    this.addEvents({
+        success: true
+        ,failure: true
+        ,beforeSubmit: true
+		,hide:true
+		//,show:true
+    });
+    this._loadForm();	
 };
-Ext.extend(localizator.window.CreateContent, MODx.Window, {
-
-    getFields: function (config) {
-        return [{
-            xtype: 'hidden',
-            name: 'resource_id',
-            id: config.id + '-resource_id',
-			allowBlank: false,
-        }, {
-			layout:'column',
-			border:false,
-			anchor: '100%',
-			style: {margin: '0 0 20px 0'},
-			items: [{
-				layout: 'form',
-				border:false,
-				columnWidth: .5,
-				items: [{
-					xtype: 'localizator-combo-language',
-					fieldLabel: _('localizator_language'),
-					anchor: '99%',
-					allowBlank: false,
-				}, {
-					xtype: 'textfield',
-					fieldLabel: _('localizator_menutitle'),
-					name: 'menutitle',
-					id: config.id + '-menutitle',
-					anchor: '99%',
-				}]
-			}, {
-				layout: 'form',
-				border:false,
-				columnWidth: .5,
-				items: [{
-					xtype: 'textfield',
-					fieldLabel: _('localizator_pagetitle'),
-					name: 'pagetitle',
-					id: config.id + '-pagetitle',
-					anchor: '99%',
-				}, {
-					xtype: 'textfield',
-					fieldLabel: _('localizator_longtitle'),
-					name: 'longtitle',
-					id: config.id + '-longtitle',
-					anchor: '99%',
-				}]
-			}, {
-				layout: 'form',
-				border:false,
-				style: {margin: 0},
-				columnWidth: 1,
-				items: [{
-					xtype: 'textarea',
-					fieldLabel: _('localizator_introtext'),
-					name: 'introtext',
-					id: config.id + '-introtext',
-					anchor: '99%',
-				}]
-			}, {
-				layout: 'form',
-				border:false,
-				style: {margin: 0},
-				columnWidth: 1,
-				items: [{
-					xtype: 'textfield',
-					fieldLabel: _('localizator_seotitle'),
-					name: 'seotitle',
-					id: config.id + '-seotitle',
-					anchor: '99%',
-				}, {
-					xtype: 'textarea',
-					fieldLabel: _('localizator_description'),
-					name: 'description',
-					id: config.id + '-description',
-					anchor: '99%',
-				}, {
-					xtype: 'textfield',
-					fieldLabel: _('localizator_keywords'),
-					name: 'keywords',
-					id: config.id + '-keywords',
-					anchor: '99%',
-				}]
-			}, /* {
-				поля перед контентом
-			},*/ {
-				layout: 'form',
-				border:false,
-				style: {margin: 0},
-				columnWidth: 1,
-				items: [{
-					xtype: 'textarea',
-					fieldLabel: '',
-					name: 'content',
-					id: config.id + '-content',
-					anchor: '99%',
-				}]
-			}]
-		}];
+Ext.extend(MODx.window.UpdatLocalizatorItem,Ext.Window,{
+    cancel: function(){
+        this.hide();
+    },         
+    onHideWindow: function(){
+   
+        var v = this.fp.getForm().getValues();
+        var fields = Ext.util.JSON.decode(v['mulititems_grid_item_fields']);
+        if (fields.length>0){
+            for (var i = 0; i < fields.length; i++) {
+                tvid = (fields[i].tv_id);
+                field = Ext.get('tv'+tvid);
+                if (field && typeof(field.onHide) != 'undefined'){
+                    field.onHide();
+                }                  
+            }
+        }
+        this.destroy();
     },
+    submit: function() {
+        var f = this.fp.getForm();
+        var v = f.getValues();
+        var fields = Ext.util.JSON.decode(v['mulititems_grid_item_fields']);
+        var tvid = '';
+        //we run onBeforeSubmit on each field, if this function exists. For example for richtext-fields.       
+        if (fields.length>0){
+            for (var i = 0; i < fields.length; i++) {
+                tvid = (fields[i].tv_id);
+                field = Ext.get('tv'+tvid);
+                if (field && typeof(field.onBeforeSubmit) != 'undefined'){
+                    field.onBeforeSubmit();
+                }                         
+            }
+        }	
+
+        if (f.isValid()) {
+			v = f.getValues();
+			delete v['mulititems_grid_item_fields'];
+            MODx.Ajax.request({
+		        url: localizator.config.connector_url
+                ,params: v
+                ,listeners: {
+                    'success': {fn:function(r){
+                    	this.grid.refresh();
+			            this.fp.getForm().reset();
+			            this.hide();
+			            return true;
+                    },scope:this}
+                    ,'failure':{fn:function(r) {
+                        return this.fireEvent('failure',r);
+                    },scope:this}
+                }
+            });
+            return true;
+        }
+        return false;
+    },
+    _loadForm: function() {
+    	
+        //if (this.checkIfLoaded(this.config.record || null)) { return false; }
+        this.fp = this.createForm({
+            url: this.config.url
+            ,baseParams: this.config.baseParams || { action: this.config.action || '' }
+            //,items: this.config.fields || []
+        });
+		//console.log('renderForm');
+        this.add(this.fp);
+    }	
+    ,createForm: function(config){
+        config = config || {};
+        
+        Ext.applyIf(config,{
+            labelAlign: this.config.labelAlign || 'right'
+            ,labelWidth: this.config.labelWidth || 100
+            ,frame: this.config.formFrame || true
+            ,popwindow : this
+			,border: false
+            ,bodyBorder: false
+            ,errorReader: MODx.util.JSONReader
+            ,url: this.config.url
+            ,baseParams: this.config.baseParams || {}
+            ,fileUpload: this.config.fileUpload || false
+        });
+        return new MODx.panel.LocalizatorWindowPanel(config);
+    }
+    ,onShow: function() {
+        this.fp.doAutoLoad();
+    }
 
 });
-Ext.reg('localizator-content-window-create', localizator.window.CreateContent);
+Ext.reg('modx-window-localizator-item-content',MODx.window.UpdatLocalizatorItem);
 
-localizator.window.UpdateContent = function (config) {
+
+MODx.panel.LocalizatorWindowPanel = function(config) {
     config = config || {};
-    if (!config.id) {
-        config.id = 'localizator-content-window-update';
-    }
-    Ext.applyIf(config, {
-        title: _('localizator_item_update'),
-        width: 768,
-        autoHeight: true,
-        url: localizator.config.connector_url,
-        action: 'mgr/content/update',
-        fields: this.getFields(config),
-        keys: [{
-            key: Ext.EventObject.ENTER, shift: true, fn: function () {
-                this.submit()
-            }, scope: this
-        }]
+    Ext.applyIf(config,{
+        id: 'xdbedit-panel-object-3'
+		,title: ''
+        ,url: config.url
+        ,baseParams: config.baseParams	
+        ,class_key: ''
+        ,bodyStyle: 'padding: 15px;'
+        //,autoSize: true
+        ,autoLoad: this.autoload(config)
+        ,width: '950'
+        ,listeners: {
+			'load': {fn:this.load,scope:this}
+        }		
     });
-    localizator.window.UpdateContent.superclass.constructor.call(this, config);
-
-	this.on('show', function() {
-		if(MODx.loadRTE !== 'undefined') {
-	      MODx.loadRTE((this.config.id || this.id) + '-content');
-	    }
-	}.bind(this));
+ 	MODx.panel.LocalizatorWindowPanel.superclass.constructor.call(this,config);
 };
-Ext.extend(localizator.window.UpdateContent, MODx.Window, {
+Ext.extend(MODx.panel.LocalizatorWindowPanel,MODx.FormPanel,{
+    autoload: function(config) {
+		this.isloading=true;
+		var a = {
+            url: localizator.config.connector_url
+            //url: config.url
+			,method: 'POST'
+            ,params: config.baseParams
+            ,scripts: true
+            ,callback: function() {
+				this.isloading=false;
+				this.isloaded=true;
+				this.fireEvent('load');
+                //MODx.fireEvent('ready');
+            }
+            ,scope: this
+        };
+        return a;        	
+    },scope: this
+    
+    ,
+    setup: function() {
 
-    getFields: function (config) {
-        return [{
-            xtype: 'hidden',
-            name: 'id',
-            id: config.id + '-id',
-			allowBlank: false,
-        }, {
-            xtype: 'hidden',
-            name: 'resource_id',
-            id: config.id + '-resource_id',
-			allowBlank: false,
-        }, {
-			layout:'column',
-			border:false,
-			anchor: '100%',
-			style: {margin: '0 0 20px 0'},
-			items: [{
-				layout: 'form',
-				border:false,
-				columnWidth: .5,
-				items: [{
-					xtype: 'localizator-combo-language',
-					fieldLabel: _('localizator_language'),
-					anchor: '99%',
-					allowBlank: false,
-				}, {
-					xtype: 'textfield',
-					fieldLabel: _('localizator_menutitle'),
-					name: 'menutitle',
-					id: config.id + '-menutitle',
-					anchor: '99%',
-				}]
-			}, {
-				layout: 'form',
-				border:false,
-				columnWidth: .5,
-				items: [{
-					xtype: 'textfield',
-					fieldLabel: _('localizator_pagetitle'),
-					name: 'pagetitle',
-					id: config.id + '-pagetitle',
-					anchor: '99%',
-				}, {
-					xtype: 'textfield',
-					fieldLabel: _('localizator_longtitle'),
-					name: 'longtitle',
-					id: config.id + '-longtitle',
-					anchor: '99%',
-				}]
-			}, {
-				layout: 'form',
-				border:false,
-				style: {margin: 0},
-				columnWidth: 1,
-				items: [{
-					xtype: 'textarea',
-					fieldLabel: _('localizator_introtext'),
-					name: 'introtext',
-					id: config.id + '-introtext',
-					anchor: '99%',
-				}]
-			}, {
-				layout: 'form',
-				border:false,
-				style: {margin: 0},
-				columnWidth: 1,
-				items: [{
-					xtype: 'textfield',
-					fieldLabel: _('localizator_seotitle'),
-					name: 'seotitle',
-					id: config.id + '-seotitle',
-					anchor: '99%',
-				}, {
-					xtype: 'textarea',
-					fieldLabel: _('localizator_description'),
-					name: 'description',
-					id: config.id + '-description',
-					anchor: '99%',
-				}, {
-					xtype: 'textfield',
-					fieldLabel: _('localizator_keywords'),
-					name: 'keywords',
-					id: config.id + '-keywords',
-					anchor: '99%',
-				}]
-			}, /* {
-				поля перед контентом
-			},*/ {
-				layout: 'form',
-				border:false,
-				style: {margin: 0},
-				columnWidth: 1,
-				items: [{
-					xtype: 'textarea',
-					fieldLabel: '',
-					name: 'content',
-					id: config.id + '-content',
-					anchor: '99%',
-				}]
-			}]
-		}];
-    },
+    }
+    ,beforeSubmit: function(o) {
+        tinyMCE.triggerSave(); 
+    }
+	,load: function() {
 
-
+        var v = this.getForm().getValues();
+        var fields = Ext.util.JSON.decode(v['mulititems_grid_item_fields']);
+        var item = {};
+        var tvs = {};        
+        var tvid = '';
+        var field = null;
+        if (fields.length>0){
+            for (var i = 0; i < fields.length; i++) {
+                
+                tvid = (fields[i].tv_id);
+                field = Ext.get('tv'+tvid);
+                if (field && typeof(field.onLoad) != 'undefined'){
+                    field.onLoad();
+                }                
+			
+            }
+        }
+        
+        this.popwindow.width='1000px';
+		this.width='1000px';
+		this.syncSize();
+		this.popwindow.syncSize();
+		return '';
+	 }
 });
-Ext.reg('localizator-content-window-update', localizator.window.UpdateContent);
+Ext.reg('xdbedit-panel-object',MODx.panel.LocalizatorWindowPanel);

@@ -4,6 +4,10 @@ $xpdo_meta_map['localizatorLanguage']= array (
   'version' => '1.1',
   'table' => 'localizator_languages',
   'extends' => 'xPDOSimpleObject',
+  'tableMeta' => 
+  array (
+    'engine' => 'MyISAM',
+  ),
   'fields' => 
   array (
     'name' => '',
@@ -50,7 +54,7 @@ $xpdo_meta_map['localizatorLanguage']= array (
     'description' => 
     array (
       'dbtype' => 'text',
-      'phptype' => 'text',
+      'phptype' => 'string',
       'null' => true,
       'default' => '',
     ),

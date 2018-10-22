@@ -73,7 +73,7 @@ class localizatorContentGetListProcessor extends modObjectGetListProcessor
             'icon' => 'icon icon-edit',
             'title' => $this->modx->lexicon('localizator_item_update'),
             //'multiple' => $this->modx->lexicon('localizator_items_update'),
-            'action' => 'updateItem',
+            'action' => 'loadUpdateWin',
             'button' => true,
             'menu' => true,
         );

@@ -35,6 +35,11 @@ $tmp = array(
 		'value' => 'pagetitle,longtitle,menutitle,seotitle,keywords,introtext,description,content',
         'area' => 'localizator_translator',
     ),
+    'tv_fields' => array(
+        'xtype' => 'textfield',
+        'value' => '',
+        'area' => 'localizator_translator',
+    ),
 );
 
 foreach ($tmp as $k => $v) {
