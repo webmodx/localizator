@@ -89,8 +89,6 @@ class localizatorContent extends xPDOSimpleObject {
     public static function _loadTVs(localizatorContent &$content)
     {
         $c = $content->xpdo->call('localizatorContent', 'prepareTVListCriteria', array(&$content));
-
-        $resource = $content->getOne('Resource');
         $c->query['distinct'] = 'DISTINCT';
         $c->select($content->xpdo->getSelectColumns('modTemplateVar', 'modTemplateVar'));
         $c->select($content->xpdo->getSelectColumns('modTemplateVarTemplate', 'tvtpl', '', array('rank')));
