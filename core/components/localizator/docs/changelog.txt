@@ -1,5 +1,13 @@
 Changelog for localizator.
 
+1.0.2-beta
+==============
+- Added translate for migxtv fields (by nizart91)
+
+1.0.1-beta
+==============
+- Added localization for tv fields (by nizart91)
+
 1.0.0-beta
 ==============
 - First release

@@ -100,18 +100,22 @@ class localizatorFormProcessor extends modProcessor {
             ],
         ];
         
-        foreach ($loc->getTemplateVars(true) as $tv){
-            if (!isset($formtabs[$tv['category_id']])){
-                $formtabs[$tv['category_id']]= [
-                    'caption' => $tv['category_name'] ? $tv['category_name'] : $this->modx->lexicon('no_category'),
+        foreach ($loc->getTemplateVars() as $tv){
+            if (!$tv->checkResourceGroupAccess()) {
+                continue;
+            }
+            $category_id = $tv->get('category_id');
+            if (!isset($formtabs[$category_id])){
+                $formtabs[$category_id]= [
+                    'caption' => $tv->get('category_name') ? $tv->get('category_name') : $this->modx->lexicon('no_category'),
                     'fields' => [],
                 ];
             }
-            $formtabs[$tv['category_id']]['fields'][] = [
-                'field' => $tv['name'],
-                'caption' => $tv['caption'],
-                'description' => $tv['description'],
-                'inputTV' => $tv['name'],
+            $formtabs[$category_id]['fields'][] = [
+                'field' => $tv->get('name'),
+                'caption' => $tv->get('caption'),
+                'description' => $tv->get('description'),
+                'inputTV' => $tv->get('name'),
             ];
         }
 

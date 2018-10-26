@@ -478,7 +478,7 @@ Ext.reg('modx-window-localizator-item-content',MODx.window.UpdatLocalizatorItem)
 MODx.panel.LocalizatorWindowPanel = function(config) {
     config = config || {};
     Ext.applyIf(config,{
-        id: 'xdbedit-panel-object-3'
+        id: 'xdbedit-panel-object-Localizator'
 		,title: ''
         ,url: config.url
         ,baseParams: config.baseParams	

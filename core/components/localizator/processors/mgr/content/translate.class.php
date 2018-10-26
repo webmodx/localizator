@@ -40,6 +40,8 @@ class localizatorContentTranslateProcessor extends modProcessor {
 			'key:!=' => $default_language
 		));
 
+		$defaultTVs = $default_content->loadTVs();
+
 		$languages = $this->modx->getIterator('localizatorLanguage', $c);
 		foreach ($languages as $language) {
 			//$this->modx->log(1, 'Перевод на ' . $language->key . ' - ' . $resource_id);
@@ -51,7 +53,16 @@ class localizatorContentTranslateProcessor extends modProcessor {
 					$val = $default_content->get($field);
 					if(empty($val)) continue;
 					if(empty($current) || !empty($current) && $translate_translated_fields) {
-						$content->set($field, $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key)));
+						//$content->set($field, $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key)));
+						if (isset($this->modx->map['localizatorContent']['fieldMeta'][$field])){
+							$content->set($field, $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key)));
+						}
+						elseif (isset($defaultTVs[$field])){
+							if ($tv = $this->modx->getObject('modTemplateVar', ['name' => $field])){
+								$tv->set('value', $val);
+								$content->set($field, $this->translateTV($tv, $default_language, ($language->cultureKey ?: $language->key)));
+							}
+						}
 					}
 				}
 				$content->save();
@@ -65,7 +76,15 @@ class localizatorContentTranslateProcessor extends modProcessor {
 				foreach($translate_fields as $field) {
 					$val = $default_content->get($field);
 					if(!empty($val)) {
-						$content->set($field, $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key)));
+						if (isset($this->modx->map['localizatorContent']['fieldMeta'][$field])){
+							$content->set($field, $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key)));
+						}
+						elseif (isset($defaultTVs[$field])){
+							if ($tv = $this->modx->getObject('modTemplateVar', ['name' => $field])){
+								$tv->set('value', $val);
+								$content->set($field, $this->translateTV($tv, $default_language, ($language->cultureKey ?: $language->key)));
+							}
+						}
 					}
 				}
 				$content->save();
@@ -80,6 +99,69 @@ class localizatorContentTranslateProcessor extends modProcessor {
 		return $this->cleanup($start);
     }
 
+    public function translateTV(modTemplateVar $tvvar, $default_language, $language){
+    	$type = $tvvar->get('type');
+    	$val = $tvvar->get('value');
+    	if (in_array($type, ['text', 'textarea', 'richtext'])){
+    		return $this->localizator->translator_Yandex($val, $default_language, $language);
+    	}
+    	elseif($type == 'migx'){
+    		$this->modx->addPackage('migx', MODX_CORE_PATH . 'components/migx/model/');
+		    $params = $tvvar->get('input_properties');
+		    $formtabs = $params['formtabs'];
+		    if (!empty($params['configs']) && $cfg = $this->modx->getObject('migxConfig', ['name' => $params['configs']])){
+		        $formtabs = $cfg->get('formtabs');
+		    }
+		    if (!is_array($formtabs))
+		    	$formtabs = json_decode($formtabs, 1);
+
+		    if (!is_array($formtabs))
+		    	return $val;
+
+		    if (!is_array($val))
+		    	$val = json_decode($val, 1);
+
+		    foreach ($formtabs as $tab){
+				foreach ($tab['fields'] as $field){
+
+	                $tv = false;
+					if (isset($field['inputTV']) && $tv = $this->modx->getObject('modTemplateVar', array('name' => $field['inputTV']))) {
+	                    
+	                }
+	                if (!empty($field['inputTVtype'])) {
+	                    $tv = $this->modx->newObject('modTemplateVar');
+	                    $tv->set('type', $field['inputTVtype']);
+	                }
+	                if (!$tv) {
+	                    $tv = $this->modx->newObject('modTemplateVar');
+	                    $tv->set('type', 'text');
+	                }
+
+	                if (!empty($field['inputOptionValues'])) {
+	                    $tv->set('elements', $field['inputOptionValues']);
+	                }
+	                if (!empty($field['configs'])) {
+	                    $cfg = $this->modx->fromJson($field['configs']);
+	                    if (is_array($cfg)) {
+	                        $params = array_merge($params, $cfg);
+	                    } else {
+	                        $params['configs'] = $field['configs'];
+	                    }
+	                }
+
+	                foreach ($val as &$v){
+	                	$tv->set('value', $v[$field['field']]);
+	                	$v[$field['field']] = $this->translateTV($tv, $default_language, $language);
+	                }
+				}
+			}
+
+			return json_encode($val);
+    	}
+    	else{
+    		return $val;
+    	}
+    }
 
     public function cleanup($processed = 0)
     {

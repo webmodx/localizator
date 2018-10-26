@@ -30,30 +30,18 @@ class localizatorContent extends xPDOSimpleObject {
             ));
         }
         $c->sortby('tvtpl.rank,modTemplateVar.rank');
-
-        if ($toArray){
-            $c->leftJoin('modCategory', 'Category', 'Category.id=modTemplateVar.category');
-            $c->select(array(
-                'IF(ISNULL(Category.id),0,Category.id) AS category_id, Category.category AS category_name',
-            ));
-            $data = array();
-            if ($c->prepare() && $c->stmt->execute()) {
-                while ($tv = $c->stmt->fetch(PDO::FETCH_ASSOC)) {
-                    $data[$tv['id']] = $tv;
-                }
-            }
-            return $data;
-        }
-        else{
-            return $content->xpdo->getCollection('modTemplateVar', $c);
-        }
+        $c->leftJoin('modCategory', 'Category', 'Category.id=modTemplateVar.category');
+        $c->select(array(
+            'IF(ISNULL(Category.id),0,Category.id) AS category_id, Category.category AS category_name',
+        ));
+        return $content->xpdo->getCollection('modTemplateVar', $c);
     }
 
 
 
-    public function getTemplateVars($toArray = false) 
+    public function getTemplateVars() 
     {
-        return $this->xpdo->call('localizatorContent', 'getTemplateVarCollection', array(&$this, $toArray));
+        return $this->xpdo->call('localizatorContent', 'getTemplateVarCollection', array(&$this));
     }
 
 
@@ -72,10 +60,29 @@ class localizatorContent extends xPDOSimpleObject {
 
         if ($fields = $content->xpdo->getOption('localizator_tv_fields', null, false, true)) {
             $fields = array_map('trim', explode(',', $fields));
-            if (!empty($fields)){
-                $c->where([
-                    'modTemplateVar.name:IN' => $fields,
-                ]);
+
+            $where = $fields_in = $fields_out = array();
+            foreach ($fields as $v) {
+                if (is_numeric($v)) {
+                    continue;
+                }
+                
+                if ($v[0] == '-') {
+                    $fields_out[] = substr($v, 1);
+                }
+                else{
+                    $fields_in[] = $v;
+                }
+            }
+
+            if (!empty($fields_in)) {
+                $where['modTemplateVar.name:IN'] = $fields_in;
+            }
+            if (!empty($fields_out)) {
+                $where['modTemplateVar.name:NOT IN'] = $fields_out;
+            }
+            if (!empty($where)){
+                $c->where($where);
             }
         }
 
@@ -197,7 +204,7 @@ class localizatorContent extends xPDOSimpleObject {
     public function save($cacheFlag = null)
     {
         $save = parent::save($cacheFlag);
-        $this->saveProductTVs();
+        $this->saveTVs();
 
         return $save;
     }
@@ -217,25 +224,97 @@ class localizatorContent extends xPDOSimpleObject {
     /**
      *
      */
-    protected function saveProductTVs()
+    protected function saveTVs()
     {
-        foreach ($this->getTVKeys() as $tvid => $tvname){
-            if (!$loctv = $this->xpdo->getObject('locTemplateVarResource', [
-                    'key' => $this->get('key'), 
-                    'contentid' => $this->get('resource_id'), 
-                    'tmplvarid' => $tvid,
-                ]
-            )){
-                $loctv = $this->xpdo->newObject('locTemplateVarResource');
-                $loctv->fromArray([
-                    'key' => $this->get('key'),
-                    'contentid' => $this->get('resource_id'),
-                    'tmplvarid' => $tvid,
-                ]);
+        $tvs = $this->xpdo->call('localizatorContent', 'getTemplateVarCollection', array(&$this));
+
+        $tvids = [];
+        foreach ($tvs as $tv) {
+            $tvids[] = $tv->get('id');
+            if (!$tv->checkResourceGroupAccess()) {
+                continue;
             }
-            $loctv->set('value', $this->get($tvname));
-            $loctv->save();
+
+            $value = $this->get($tv->get('name'));
+
+            /* set value of TV */
+            if ($tv->get('type') != 'checkbox') {
+                $value = $value !== null ? $value : $tv->get('default_text');
+            } else {
+                $value = $value ? $value : '';
+            }
+
+            /* validation for different types */
+            switch ($tv->get('type')) {
+                case 'url':
+                    $value = str_replace(array('ftp://','http://'),'', $value);
+                    $value = $prefix.$value;
+                    break;
+                case 'date':
+                    $value = empty($value) ? '' : strftime('%Y-%m-%d %H:%M:%S',strtotime($value));
+                    break;
+                /* ensure tag types trim whitespace from tags */
+                case 'tag':
+                case 'autotag':
+                    $tags = explode(',',$value);
+                    $newTags = array();
+                    foreach ($tags as $tag) {
+                        $newTags[] = trim($tag);
+                    }
+                    $value = implode(',',$newTags);
+                    break;
+                default:
+                    /* handles checkboxes & multiple selects elements */
+                    if (is_array($value)) {
+                        $featureInsert = array();
+                        foreach ($value as $featureValue => $featureItem) {
+                            if (isset($featureItem) && $featureItem === '') {
+                                continue;
+                            }
+                            $featureInsert[count($featureInsert)] = $featureItem;
+                        }
+                        $value = implode('||',$featureInsert);
+                    }
+                    break;
+            }
+
+            /* if different than default and set, set TVR record */
+            $default = $tv->processBindings($tv->get('default_text'), $this->get('resource_id'));
+            if (strcmp($value,$default) != 0) {
+                /* update the existing record */
+                $tvc = $this->xpdo->getObject('locTemplateVarResource',array(
+                    'key' => $this->get('key'),
+                    'tmplvarid' => $tv->get('id'),
+                    'contentid' => $this->get('resource_id'),
+                ));
+                if ($tvc == null) {
+                    /** @var modTemplateVarResource $tvc add a new record */
+                    $tvc = $this->xpdo->newObject('locTemplateVarResource');
+                    $tvc->set('key',$this->get('key'));
+                    $tvc->set('tmplvarid',$tv->get('id'));
+                    $tvc->set('contentid',$this->get('resource_id'));
+                }
+                $tvc->set('value',$value);
+                $tvc->save();
+
+            /* if equal to default value, erase TVR record */
+            } else {
+                $tvc = $this->xpdo->getObject('locTemplateVarResource',array(
+                    'key' => $this->get('key'),
+                    'tmplvarid' => $tv->get('id'),
+                    'contentid' => $this->get('resource_id'),
+                ));
+                if (!empty($tvc)) {
+                    $tvc->remove();
+                }
+            }
         }
+
+        $this->xpdo->removeCollection('locTemplateVarResource', array(
+            'key' => $this->get('key'),
+            'tmplvarid:NOT IN' => $tvids,
+            'contentid' => $this->get('resource_id'),
+        ));
     }
 
 }

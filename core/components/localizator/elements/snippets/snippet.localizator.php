@@ -22,14 +22,30 @@ $localizatorTVs = array();
 if ($includeTVs = $modx->getOption('includeTVs', $scriptProperties, false, true)) {
 	$includeTVs = array_map('trim', explode(',', $includeTVs));
 
+	$fields_in = $fields_out = array();
 	if ($fields = $modx->getOption('localizator_tv_fields', null, false, true)) {
 	    $fields = array_map('trim', explode(',', $fields));
+
+        foreach ($fields as $v) {
+            if (is_numeric($v)) {
+                continue;
+            }
+            
+            if ($v[0] == '-') {
+                $fields_out[] = substr($v, 1);
+            }
+            else{
+                $fields_in[] = $v;
+            }
+        }
 	}
 
 	foreach ($includeTVs as $tv){
-		if (!empty($tv) && ($fields === false || in_array($tv, $fields))){
-			$localizatorTVs[] = $tv;
-		}
+		if (empty($v)) continue;
+		if (in_array($tv, $fields_out)) continue;
+		if (!empty($fields) && !in_array($tv, $fields))) continue;
+
+		$localizatorTVs[] = $tv;
 	}
 }
 
