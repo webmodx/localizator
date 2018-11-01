@@ -3,7 +3,7 @@
 $properties = array();
 
 $tmp = array(
-    'element' => array(
+    'snippet' => array(
         'type' => 'textfield',
         'value' => 'pdoResources',
     ),

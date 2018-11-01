@@ -4,6 +4,7 @@ Changelog for localizator.
 ==============
 - Added translate for migxtv fields (by nizart91)
 - Fixed localizatorcontent.class.php
+- Fixed snippet Localizator
 
 1.0.1-beta
 ==============

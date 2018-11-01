@@ -5,7 +5,7 @@ MODx Revolution component for multilanguage sites with auto translate
 header.tpl
 ```
 {'!Localizator' | snippet : [
-'element' => 'pdoMenu',
+'snippet' => 'pdoMenu',
 'parents' => 0,
 'level' => 2,
 'startId' => 0,
@@ -34,7 +34,7 @@ main.tpl
 <br>
 <ul>
 {'!Localizator' | snippet : [
-'element' => 'pdoResources',
+'snippet' => 'pdoResources',
   'parents' => 4,
     'tpl' => '@INLINE <li><a href="{$uri}">{$pagetitle}</a></li>'
 ]}

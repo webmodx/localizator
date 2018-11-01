@@ -71,7 +71,8 @@ $localizatorProperties = array(
     'localizator_key' => $localizator_key,
 );
 
-$elementName = $scriptProperties['element'];
+$elementName = $modx->getOption('snippet', $scriptProperties, 'pdoResources', true);
+unset($scriptProperties['snippet']);
 $elementSet = array();
 if (strpos($elementName, '@') !== false) {
 	list($elementName, $elementSet) = explode('@', $elementName);
