@@ -47,5 +47,7 @@ define('BUILD_PLUGIN_STATIC', false);
 
 $BUILD_RESOLVERS = array(
 	'extension',
+	'setup.modx.com',
+	'setup',
     'tables',
 );

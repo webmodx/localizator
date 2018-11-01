@@ -7,7 +7,7 @@ if (!function_exists('installPackage')) {
 
         /** @var modTransportProvider $provider */
         if (!$provider = $modx->getObject('transport.modTransportProvider',
-            array('service_url:LIKE' => '%simpledream.ru%', 'OR:service_url:LIKE' => '%modstore.pro%'))
+            array('service_url:LIKE' => '%rest.modx.com%'))
         ) {
             $provider = $modx->getObject('transport.modTransportProvider', 1);
         }
@@ -124,7 +124,7 @@ if (!function_exists('downloadPackage')) {
 }
 
 $packages = array(
-    'pdoTools' => '2.11.3-pl',
+    'MIGX' => '2.12.0-pl',
 );
 $success = false;
 
