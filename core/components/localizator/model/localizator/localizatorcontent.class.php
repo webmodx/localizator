@@ -4,7 +4,7 @@ class localizatorContent extends xPDOSimpleObject {
     protected $tvs = null;
     protected $TVKeys = null;
  
-    public static function getTemplateVarCollection(localizatorContent &$content, $toArray = false) 
+    public static function getTemplateVarCollection(localizatorContent &$content) 
     {
         $c = $content->xpdo->call('localizatorContent', 'prepareTVListCriteria', array(&$content));
 
