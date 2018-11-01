@@ -4,19 +4,11 @@ MODx Revolution component for multilanguage sites with auto translate
 
 header.tpl
 ```
-{'!pdoMenu' | snippet : [
+{'!Localizator' | snippet : [
+'element' => 'pdoMenu',
 'parents' => 0,
 'level' => 2,
 'startId' => 0,
-'leftJoin' => '{
-"localizator" : {
-"class" : "localizatorContent",
-"alias" : "localizator",
-"on" : "localizator.resource_id = modResource.id"
-}
-}',
-'select' => '{ "localizator" : "modResource.*, localizator.*, modResource.id" }',
-'where' => '{ "localizator.key" : "' ~ ('localizator_key' | option) ~ '"}',
 'tplParentRow' => '@INLINE
 <li class="[[+classnames]] dropdown">
 <a href="#" class="dropdown-toggle" data-toggle="dropdown" [[+attributes]]>[[+menutitle]]<b class="caret"></b></a>
@@ -41,17 +33,9 @@ main.tpl
 <hr>
 <br>
 <ul>
-{'!pdoResources' | snippet : [
+{'!Localizator' | snippet : [
+'element' => 'pdoResources',
   'parents' => 4,
-  'leftJoin' => '{
-    "localizator" : {
-      "class" : "localizatorContent",
-      "alias" : "localizator",
-      "on" : "localizator.resource_id = modResource.id"
-    }
-  }',
-  'select' => '{ "localizator" : "modResource.*, localizator.*, modResource.id" }',
-    'where' => '{ "localizator.key" : "' ~ ('localizator_key' | option) ~ '"}',
     'tpl' => '@INLINE <li><a href="{$uri}">{$pagetitle}</a></li>'
 ]}
 </ul>
