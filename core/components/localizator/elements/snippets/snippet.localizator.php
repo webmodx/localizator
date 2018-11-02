@@ -43,7 +43,7 @@ if ($includeTVs = $modx->getOption('includeTVs', $scriptProperties, false, true)
 	foreach ($includeTVs as $tv){
 		if (empty($v)) continue;
 		if (in_array($tv, $fields_out)) continue;
-		if (!empty($fields) && !in_array($tv, $fields))) continue;
+		if (!empty($fields) && !in_array($tv, $fields)) continue;
 
 		$localizatorTVs[] = $tv;
 	}
