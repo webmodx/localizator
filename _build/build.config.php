@@ -34,7 +34,7 @@ define('BUILD_MENU_UPDATE', true);
 define('BUILD_SETTING_UPDATE', false);
 //define('BUILD_CHUNK_UPDATE', false);
 
-//define('BUILD_SNIPPET_UPDATE', true);
+define('BUILD_SNIPPET_UPDATE', true);
 define('BUILD_PLUGIN_UPDATE', true);
 //define('BUILD_EVENT_UPDATE', true);
 //define('BUILD_POLICY_UPDATE', true);
