@@ -29,6 +29,7 @@ $sources = array(
     'pages' => $root . 'core/components/' . PKG_NAME_LOWER . '/elements/pages/',
     'source_assets' => $root . 'assets/components/' . PKG_NAME_LOWER,
     'source_core' => $root . 'core/components/' . PKG_NAME_LOWER,
+    'pdotools_core' => $root . 'core/components/pdotools/model/pdotools/pdofetchlocalizator.class.php',
 );
 unset($root);
 
@@ -238,6 +239,10 @@ $vehicle->resolve('file', array(
 $vehicle->resolve('file', array(
     'source' => $sources['source_core'],
     'target' => "return MODX_CORE_PATH . 'components/';",
+));
+$vehicle->resolve('file', array(
+    'source' => $sources['pdotools_core'],
+    'target' => "return MODX_CORE_PATH . 'components/pdotools/model/pdotools/';",
 ));
 
 /** @var array $BUILD_RESOLVERS */

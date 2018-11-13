@@ -20,33 +20,44 @@ $select = array(
 $localizatorTVs = array();
 
 if ($includeTVs = $modx->getOption('includeTVs', $scriptProperties, false, true)) {
-	$includeTVs = array_map('trim', explode(',', $includeTVs));
+    $includeTVs = array_map('trim', explode(',', $includeTVs));
+    if (isset($scriptProperties['localizatorTVs'])){
+        $localizatorTVs = $modx->getOption('localizatorTVs', $scriptProperties);
+        if (is_numeric($localizatorTVs)) {
+            $localizatorTVs = (bool)$localizatorTVs ? $includeTVs : array();
+        }
+        else{
+            $localizatorTVs = array_map('trim', explode(',', $localizatorTVs));
+        }
+    }
+    else{
+        $localizatorTVs = array();
+        $fields_in = $fields_out = array();
+        if ($fields = $modx->getOption('localizator_tv_fields', null, false, true)) {
+            $fields = array_map('trim', explode(',', $fields));
 
-	$fields_in = $fields_out = array();
-	if ($fields = $modx->getOption('localizator_tv_fields', null, false, true)) {
-	    $fields = array_map('trim', explode(',', $fields));
-
-        foreach ($fields as $v) {
-            if (is_numeric($v)) {
-                continue;
-            }
-            
-            if ($v[0] == '-') {
-                $fields_out[] = substr($v, 1);
-            }
-            else{
-                $fields_in[] = $v;
+            foreach ($fields as $v) {
+                if (is_numeric($v)) {
+                    continue;
+                }
+                
+                if ($v[0] == '-') {
+                    $fields_out[] = substr($v, 1);
+                }
+                else{
+                    $fields_in[] = $v;
+                }
             }
         }
-	}
 
-	foreach ($includeTVs as $tv){
-		if (empty($v)) continue;
-		if (in_array($tv, $fields_out)) continue;
-		if (!empty($fields) && !in_array($tv, $fields)) continue;
+        foreach ($includeTVs as $tv){
+            if (empty($tv)) continue;
+            if (in_array($tv, $fields_out)) continue;
+            if (!empty($fields_in) && !in_array($tv, $fields_in)) continue;
 
-		$localizatorTVs[] = $tv;
-	}
+            $localizatorTVs[] = $tv;
+        }
+    }
 }
 
 // Add user parameters
@@ -75,25 +86,25 @@ $elementName = $modx->getOption('snippet', $scriptProperties, 'pdoResources', tr
 unset($scriptProperties['snippet']);
 $elementSet = array();
 if (strpos($elementName, '@') !== false) {
-	list($elementName, $elementSet) = explode('@', $elementName);
+    list($elementName, $elementSet) = explode('@', $elementName);
 }
 /** @var modSnippet $snippet */
 if (!empty($elementName) && $element = $modx->getObject('modSnippet', array('name' => $elementName))) {
-	$elementProperties = $element->getProperties();
-	$elementPropertySet = !empty($elementSet)
-		? $element->getPropertySet($elementSet)
-		: array();
-	if (!is_array($elementPropertySet)) {$elementPropertySet = array();}
-	$params = array_merge(
-		$elementProperties,
-		$elementPropertySet,
-		$scriptProperties,
-		$localizatorProperties
-	);
-	$element->setCacheable(false);
-	return $element->process($params);
+    $elementProperties = $element->getProperties();
+    $elementPropertySet = !empty($elementSet)
+        ? $element->getPropertySet($elementSet)
+        : array();
+    if (!is_array($elementPropertySet)) {$elementPropertySet = array();}
+    $params = array_merge(
+        $elementProperties,
+        $elementPropertySet,
+        $scriptProperties,
+        $localizatorProperties
+    );
+    $element->setCacheable(false);
+    return $element->process($params);
 }
 else {
-	$modx->log(modX::LOG_LEVEL_ERROR, '[Localizator] Could not find main snippet with name: "'.$elementName.'"');
-	return '';
+    $modx->log(modX::LOG_LEVEL_ERROR, '[Localizator] Could not find main snippet with name: "'.$elementName.'"');
+    return '';
 }
