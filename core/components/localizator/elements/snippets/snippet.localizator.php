@@ -21,7 +21,7 @@ $localizatorTVs = array();
 
 if ($includeTVs = $modx->getOption('includeTVs', $scriptProperties, false, true)) {
     $includeTVs = array_map('trim', explode(',', $includeTVs));
-    if (isset($scriptProperties['localizatorTVs'])){
+    if (isset($scriptProperties['localizatorTVs']) && !empty($scriptProperties['localizatorTVs'])){
         $localizatorTVs = $modx->getOption('localizatorTVs', $scriptProperties);
         if (is_numeric($localizatorTVs)) {
             $localizatorTVs = (bool)$localizatorTVs ? $includeTVs : array();
