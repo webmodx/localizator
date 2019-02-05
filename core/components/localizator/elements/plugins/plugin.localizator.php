@@ -63,6 +63,7 @@ switch($modx->event->name) {
             $modx->setOption('cultureKey', $cultureKey);
 
             $modx->setPlaceholders(array(
+                'localizator_key' => $language->key,
                 'cultureKey' => $cultureKey,
                 'site_url' => $_SERVER['REQUEST_SCHEME'] . '://' . $language->http_host,
             ), '+');
