@@ -1,5 +1,9 @@
 Changelog for localizator.
 
+1.0.3-beta1
+==============
+- Fixed snippet Localizator
+
 1.0.3-beta
 ==============
 - Fixed snippet Localizator
