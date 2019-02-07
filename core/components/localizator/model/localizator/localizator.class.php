@@ -315,4 +315,42 @@ class localizator
         return $mediasource;
     }
 
+    function findLocalization($http_host, &$request){
+        $host = $find = $http_host;
+        if($request) {
+            if(strpos($request, '/') !== false) {
+                // "site.com/en/blog/article" to "site.com/en/"
+                $tmp = explode('/', $request);
+                $find = $host . '/' . $tmp[0] . '/';
+            } else {
+                $find = $host . '/' . $request;
+            }
+        }
+        $q = $this->modx->newQuery('localizatorLanguage');
+        $q->where(array(
+            array('http_host' => $find),
+            array('OR:http_host:=' => $host),
+        ));
+        $q->sortby("FIELD(http_host, '{$find}', '{$host}')");
+        $language = $this->modx->getObject('localizatorLanguage', $q);
+        if($language) {
+            $this->modx->localizator_key = $language->key;
+            $this->modx->setOption('localizator_key', $this->modx->localizator_key);
+            $this->modx->setOption('cache_resource_key', 'resource/' . $this->modx->localizator_key);
+
+            $this->modx->cultureKey = $cultureKey = ($language->cultureKey ?: $language->key);
+            $this->modx->setOption('cultureKey', $cultureKey);
+
+            $this->modx->setPlaceholders(array(
+                'localizator_key' => $language->key,
+                'cultureKey' => $cultureKey,
+                'site_url' => $_SERVER['REQUEST_SCHEME'] . '://' . $language->http_host,
+            ), '+');
+
+            $this->modx->lexicon->load($cultureKey . ':localizator:site');
+
+            return true;
+        }
+        return false;
+    }
 }

@@ -1,5 +1,6 @@
 <?php
-
+ini_set("display_errors",1);
+error_reporting(E_ALL);
 $mtime = microtime();
 $mtime = explode(' ', $mtime);
 $mtime = $mtime[1] + $mtime[0];
@@ -30,6 +31,7 @@ $sources = array(
     'source_assets' => $root . 'assets/components/' . PKG_NAME_LOWER,
     'source_core' => $root . 'core/components/' . PKG_NAME_LOWER,
     'pdotools_core' => $root . 'core/components/pdotools/model/pdotools/pdofetchlocalizator.class.php',
+    'msearch2_custom' => $root . 'core/components/msearch2/custom/filters/localizator.class.php',
 );
 unset($root);
 
@@ -243,6 +245,10 @@ $vehicle->resolve('file', array(
 $vehicle->resolve('file', array(
     'source' => $sources['pdotools_core'],
     'target' => "return MODX_CORE_PATH . 'components/pdotools/model/pdotools/';",
+));
+$vehicle->resolve('file', array(
+    'source' => $sources['msearch2_custom'],
+    'target' => "return MODX_CORE_PATH . 'components/msearch2/custom/filters/';",
 ));
 
 /** @var array $BUILD_RESOLVERS */

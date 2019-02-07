@@ -10,11 +10,13 @@ $tmp = array(
         'description' => '',
         'events' => array(
             'OnDocFormPrerender' => array(),
+            'OnMODXInit' => array(),
             'OnHandleRequest' => array(),
             'OnPageNotFound' => array(),
             'OnLoadWebDocument' => array(),
             'OnDocFormSave' => array(),
             'OnEmptyTrash' => array(),
+            'mse2OnBeforeSearchIndex' => array(),
         )
     )
 );

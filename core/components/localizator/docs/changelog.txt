@@ -1,8 +1,12 @@
 Changelog for localizator.
 
-1.0.3-beta1
+1.0.4-beta
 ==============
 - Fixed snippet Localizator
+- Fixed plugin Localizator
+- Fixed localizator.class.php
+- Added mse2_filters_handler_class
+- Added localization fields indexing in mSearch2 (by pavelgvozdb - https://modx.pro/howto/16466)
 
 1.0.3-beta
 ==============

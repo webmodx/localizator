@@ -4,6 +4,15 @@ $localizator = $modx->getService('localizator');
 $class = $modx->getOption('class', $scriptProperties, 'modResource', true);
 $localizator_key = $modx->getOption('localizator_key', $scriptProperties, $modx->getOption('localizator_key', null), true);
 
+$elementName = $modx->getOption('snippet', $scriptProperties, 'pdoResources', true);
+$elementSet = array();
+if (strpos($elementName, '@') !== false) {
+    list($elementName, $elementSet) = explode('@', $elementName);
+}
+if ($elementName == 'msProducts'){
+    $class = $scriptProperties['class'] = 'msProduct';
+}
+
 // Start build "where" expression
 $where = array(
     'localizator.key' => $localizator_key,
@@ -82,12 +91,8 @@ $localizatorProperties = array(
     'localizator_key' => $localizator_key,
 );
 
-$elementName = $modx->getOption('snippet', $scriptProperties, 'pdoResources', true);
+
 unset($scriptProperties['snippet']);
-$elementSet = array();
-if (strpos($elementName, '@') !== false) {
-    list($elementName, $elementSet) = explode('@', $elementName);
-}
 /** @var modSnippet $snippet */
 if (!empty($elementName) && $element = $modx->getObject('modSnippet', array('name' => $elementName))) {
     $elementProperties = $element->getProperties();

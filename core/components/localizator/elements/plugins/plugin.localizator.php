@@ -1,9 +1,8 @@
 <?php
+$localizator = $modx->getService('localizator');
 switch($modx->event->name) {
     case 'OnDocFormPrerender':
         if ($mode == 'upd'){
-                
-            $localizator = $modx->getService('localizator');
             $modx->controller->addLexiconTopic('localizator:default');
             $modx->controller->addCss($localizator->config['cssUrl'] . 'mgr/main.css');
             $modx->controller->addCss($localizator->config['cssUrl'] . 'mgr/bootstrap.buttons.css');
@@ -34,47 +33,25 @@ switch($modx->event->name) {
         }
         break;
 
+    case 'OnMODXInit':
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
+        if ($modx->getOption('friendly_urls') && $isAjax && isset($_SERVER['HTTP_REFERER'])){
+            $referer = parse_url($_SERVER['HTTP_REFERER']);
+            if (stripos($referer['path'], MODX_MANAGER_URL) === 0) return;
+            $localizator->findLocalization($referer['host'], ltrim($referer['path'], '/'));
+        }
+        break;
+
     case 'OnHandleRequest':
         if($modx->context->key == 'mgr' || !$modx->getOption('friendly_urls')) return;
-            $request = &$_REQUEST['q'];
-        $host = $find = $_SERVER['HTTP_HOST'];
-        if($request) {
-            if(strpos($request, '/') !== false) {
-                // "site.com/en/blog/article" to "site.com/en/"
-                $tmp = explode('/', $request);
-                $find = $host . '/' . $tmp[0] . '/';
-            } else {
-                $find = $host . '/' . $request;
-            }
-        }
-        $q = $modx->newQuery('localizatorLanguage');
-        $q->where(array(
-            array('http_host' => $find),
-            array('OR:http_host:=' => $host)
-        ));
-        $q->sortby("FIELD(http_host, '{$find}', '{$host}')");
-        $language = $modx->getObject('localizatorLanguage', $q);
-        if($language) {
-            $modx->localizator_key = $language->key;
-            $modx->setOption('localizator_key', $modx->localizator_key);
-            $modx->setOption('cache_resource_key', 'resource/' . $modx->localizator_key);
-
-            $modx->cultureKey = $cultureKey = ($language->cultureKey ?: $language->key);
-            $modx->setOption('cultureKey', $cultureKey);
-
-            $modx->setPlaceholders(array(
-                'localizator_key' => $language->key,
-                'cultureKey' => $cultureKey,
-                'site_url' => $_SERVER['REQUEST_SCHEME'] . '://' . $language->http_host,
-            ), '+');
-
-            $modx->lexicon->load($cultureKey . ':localizator:site');
-        }
+        $q_var = $modx->getOption('request_param_alias', null, 'q');
+        $localizator->findLocalization($_SERVER['HTTP_HOST'], $_REQUEST[$q_var]);
         break;
 
     case 'OnPageNotFound':
         $localizator_key = $modx->localizator_key;
-        $request = &$_REQUEST['q'];
+        $q_var = $modx->getOption('request_param_alias', null, 'q');
+        $request = &$_REQUEST[$q_var];
         if($request == $localizator_key) {
             $modx->sendRedirect($request . '/', array('responseCode' => 'HTTP/1.1 301 Moved Permanently'));
         } else if (preg_match('/^('.$localizator_key.')\//i', $request)) {
@@ -159,7 +136,32 @@ switch($modx->event->name) {
         break;
 
     case 'OnEmptyTrash':
-        $modx->removeCollection('localizatorContent', array('resource_id:IN' => $ids));
-        $modx->removeCollection('locTemplateVarResource', array('contentid:IN' => $ids));
+        if (!empty($ids)){
+            $modx->removeCollection('localizatorContent', array('resource_id:IN' => $ids));
+            $modx->removeCollection('locTemplateVarResource', array('contentid:IN' => $ids));
+        }
+        break;
+
+    case 'mse2OnBeforeSearchIndex':
+        $keys = $mSearch2->fields;
+        unset($keys['comment']);
+
+        if ($contents = $modx->getCollection('localizatorContent', array('resource_id' => $resource->id))) {
+            foreach ($contents as $content) {
+                foreach ($keys as $k => $v) {
+                    $field = $k;
+                    if (strpos($field, 'tv_') !== false) {
+                        $field = substr($field, 3);
+                    }
+                    $value = $content->get($field);
+                    // Если поле заполнено
+                    if (!empty($value)) {
+                        $field_key = $content->key . '-' . $k;
+                        $mSearch2->fields[$field_key] = $v;
+                        $resource->set($field_key, $value);
+                    }
+                }
+            }
+        }
         break;
 }

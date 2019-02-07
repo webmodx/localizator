@@ -1,7 +1,7 @@
 <?php
 
 if (!class_exists('pdoFetch')) {
-    require_once dirname(__FILE__) . 'pdofetch.class.php';
+    require_once dirname(__FILE__) . '/pdofetch.class.php';
 }
 
 class pdoFetchLocalizator extends pdoFetch

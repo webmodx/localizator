@@ -3,6 +3,19 @@ class localizatorContent extends xPDOSimpleObject {
 
     protected $tvs = null;
     protected $TVKeys = null;
+
+    public $_originalFieldMeta;
+
+    /**
+     * msProduct constructor.
+     *
+     * @param xPDO $xpdo
+     */
+    function __construct(xPDO & $xpdo)
+    {
+        parent::__construct($xpdo);
+        $this->_originalFieldMeta = $this->_fieldMeta;
+    }
  
     public static function getTemplateVarCollection(localizatorContent &$content) 
     {
