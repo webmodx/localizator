@@ -90,6 +90,7 @@ switch($modx->event->name) {
             foreach ($content->getTVKeys() as $field){
                 $value = $content->get($field);
                 if (!empty($value)){
+                    $value = localizatorContent::renderTVOutput($modx, $field, $value, $modx->resource->id);
                     $modx->resource->_fieldMeta[$field] = [
                         'dbtype' => 'mediumtext',
                         'phptype' => 'string',
@@ -132,6 +133,10 @@ switch($modx->event->name) {
                     $content->save();
                 }
             }
+        }
+        elseif (in_array($resource->get('class_key'), array('modStaticResource', 'modSymLink', 'modWebLink'))){
+            $upd = $modx->prepare("UPDATE ".$modx->getTableName('localizatorContent')." SET `content` = ? WHERE `resource_id` = ?");
+            $upd->execute(array($resource->get('content'), $resource->get('id')));
         }
         break;
 

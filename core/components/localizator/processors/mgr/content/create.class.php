@@ -5,7 +5,7 @@ class localizatorContentCreateProcessor extends modObjectCreateProcessor
     public $objectType = 'localizatorContent';
     public $classKey = 'localizatorContent';
     public $languageTopics = array('localizator');
-    //public $permission = 'create';
+    public $permission = '';
 
     function __construct(modX & $modx,array $properties = array()) {
         parent::__construct($modx, $properties);
@@ -17,6 +17,14 @@ class localizatorContentCreateProcessor extends modObjectCreateProcessor
             }
         }
     }
+
+    public function checkPermissions() {
+        if (!$this->modx->getOption('localizator_check_permissions', null, false, true)) return true;
+        $key = trim($this->getProperty('key'));
+        $this->permission = "localizatorcontent_save_{$key}";
+        return parent::checkPermissions();
+    }
+
     /**
      * @return bool
      */
@@ -25,9 +33,13 @@ class localizatorContentCreateProcessor extends modObjectCreateProcessor
         $key = trim($this->getProperty('key'));
         $resource_id = $this->getProperty('resource_id');
         if (empty($key)) {
-            $this->modx->error->addField('key', $this->modx->lexicon('localizator_item_err_key'));
+            return $this->modx->lexicon('localizator_language_err_no_key');
         } elseif ($this->modx->getCount($this->classKey, array('key' => $key, 'resource_id' => $resource_id))) {
-            $this->modx->error->addField('key', $this->modx->lexicon('localizator_item_err_ae'));
+            return $this->modx->lexicon('localizator_content_err_ae');
+        }
+
+        if (!$this->checkPermissions()) {
+            return $this->modx->lexicon('access_denied');
         }
 
         return parent::beforeSet();

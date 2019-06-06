@@ -4,8 +4,8 @@
 define('PKG_NAME', 'localizator');
 define('PKG_NAME_LOWER', strtolower(PKG_NAME));
 
-define('PKG_VERSION', '1.0.4');
-define('PKG_RELEASE', 'beta');
+define('PKG_VERSION', '1.0.5');
+define('PKG_RELEASE', 'beta1');
 define('PKG_AUTO_INSTALL', true);
 define('PKG_NAMESPACE_PATH', '{core_path}components/' . PKG_NAME_LOWER . '/');
 
@@ -37,8 +37,8 @@ define('BUILD_SETTING_UPDATE', false);
 define('BUILD_SNIPPET_UPDATE', true);
 define('BUILD_PLUGIN_UPDATE', true);
 //define('BUILD_EVENT_UPDATE', true);
-//define('BUILD_POLICY_UPDATE', true);
-//define('BUILD_POLICY_TEMPLATE_UPDATE', true);
+define('BUILD_POLICY_UPDATE', false);
+define('BUILD_POLICY_TEMPLATE_UPDATE', true);
 //define('BUILD_PERMISSION_UPDATE', true);
 
 //define('BUILD_CHUNK_STATIC', false);
@@ -50,4 +50,6 @@ $BUILD_RESOLVERS = array(
 	'setup.modx.com',
 	'setup',
     'tables',
+    'weblink',
+    'policy',
 );

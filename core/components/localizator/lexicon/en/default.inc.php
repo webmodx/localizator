@@ -64,3 +64,5 @@ $_lang['localizator_item_err_save'] = 'Save failed';
 
 $_lang['localizator_grid_search'] = 'Search';
 $_lang['localizator_grid_actions'] = 'Actions';
+
+$_lang['localizator_content_err_ae'] = 'Localization of the resource is already filled';

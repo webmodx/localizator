@@ -18,6 +18,8 @@ class localizatorContentTranslateProcessor extends modProcessor {
 			return $this->failure('Для автоматического перевода необходимо добавить хотя бы одну запись в таблицу');
 		}
 
+        $loc_permission = $this->modx->getOption('localizator_check_permissions', null, false, true);
+
 		$translate_translated = $this->modx->getOption('localizator_translate_translated', null, false);
 		$translate_translated_fields = $this->modx->getOption('localizator_translate_translated_fields', null, false);
 		$translate_fields = explode(',', $this->modx->getOption('localizator_translate_fields', null, 'pagetitle,longtitle,menutitle,seotitle,keywords,introtext,description,content'));
@@ -28,7 +30,7 @@ class localizatorContentTranslateProcessor extends modProcessor {
         if ($time_limit <= 5) {
             $time_limit = 5;
         }
-        $start = $this->getProperty('start', 0);
+        $start = $this->getProperty('start', 0);   
 
         $c = $this->modx->newQuery('localizatorLanguage');
         if ($start == 0) {
@@ -44,6 +46,11 @@ class localizatorContentTranslateProcessor extends modProcessor {
 
 		$languages = $this->modx->getIterator('localizatorLanguage', $c);
 		foreach ($languages as $language) {
+
+            if ($loc_permission && !$this->modx->hasPermission("localizatorcontent_save_" . $language->key)){
+                continue;
+            }
+
 			//$this->modx->log(1, 'Перевод на ' . $language->key . ' - ' . $resource_id);
 
 			$content = $this->modx->getObject('localizatorContent', array('key' => $language->key, 'resource_id' => $resource_id));

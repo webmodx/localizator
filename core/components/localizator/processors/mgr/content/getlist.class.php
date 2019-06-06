@@ -6,7 +6,7 @@ class localizatorContentGetListProcessor extends modObjectGetListProcessor
     public $classKey = 'localizatorContent';
     public $defaultSortField = 'id';
     public $defaultSortDirection = 'DESC';
-    //public $permission = 'list';
+    public $permission = 'localizatorcontent_list';
 
 
     /**
@@ -17,6 +17,9 @@ class localizatorContentGetListProcessor extends modObjectGetListProcessor
      */
     public function beforeQuery()
     {
+        $this->loc_permission = $this->modx->getOption('localizator_check_permissions', null, false, true);
+        if (!$this->loc_permission) return true;
+
         if (!$this->checkPermissions()) {
             return $this->modx->lexicon('access_denied');
         }
@@ -32,13 +35,31 @@ class localizatorContentGetListProcessor extends modObjectGetListProcessor
      */
     public function prepareQueryBeforeCount(xPDOQuery $c)
     {
+        $resource_id = $this->getProperty('resource_id');
+        $where = array(
+            'resource_id' => $resource_id,
+            'localizatorLanguage.active' => 1,
+        );
+
+        if ($this->loc_permission){
+            $q = $this->modx->newQuery('localizatorLanguage')
+                ->where(array(
+                    'active' => 1,
+                ))
+                ->select('key');
+
+            if ($q->prepare() && $q->stmt->execute()) {
+                while($key = $q->stmt->fetchColumn()){
+                    if (!$this->modx->hasPermission("localizatorcontent_view_{$key}")){
+                        $where['localizatorContent.key:NOT IN'][] = $key;
+                    }
+                }
+            }
+        }
 
 		$c->leftJoin('localizatorLanguage','localizatorLanguage', 'localizatorLanguage.key = localizatorContent.key');
 		$c->select('localizatorContent.*, CONCAT(localizatorLanguage.name, char(32), char(91), CONCAT(localizatorLanguage.key, char(93), " (", localizatorLanguage.http_host, ")"))  as `_key` ');
-		$resource_id = $this->getProperty('resource_id');
-		$c->where(array(
-			'resource_id' => $resource_id
-		));
+		$c->where($where);
 
 		$query = trim($this->getProperty('query'));
         if ($query) {

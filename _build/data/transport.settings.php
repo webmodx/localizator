@@ -9,6 +9,11 @@ $tmp = array(
         'xtype' => 'textfield',
         'area' => 'localizator_main',
     ),
+    'check_permissions' => array(
+        'xtype' => 'combo-boolean',
+        'value' => false,
+        'area' => 'localizator_main',
+    ),
 
 	// translator
 	'default_translator' => array(

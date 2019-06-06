@@ -1,5 +1,17 @@
 Changelog for localizator.
 
+1.0.5-beta1
+==============
+- Fixed processTVs
+- Added policy template for editing localizations
+- Added german lexicon (by Ibochkarev).
+- Added franch lexicon (by Ibochkarev).
+
+1.0.4-beta1
+==============
+- Fixed error modWebLink resources
+- Fixed error tinymce_rte
+
 1.0.4-beta
 ==============
 - Fixed snippet Localizator

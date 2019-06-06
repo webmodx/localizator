@@ -23,3 +23,6 @@ $_lang['setting_localizator_translate_fields_desc'] = 'Указанные пол
 
 $_lang['setting_localizator_tv_fields'] = 'Список дополнительный полей (TV)';
 $_lang['setting_localizator_tv_fields_desc'] = 'Указанные дополнительные поля будут доступны для редактирования в локализации. Оставьте настройку пустой, если нужны все доп.поля';
+
+$_lang['setting_localizator_check_permissions'] = 'Проверять доступ на редактирование';
+$_lang['setting_localizator_check_permissions_desc'] = 'Проверять доступ на редактирование Локализаций ресурса';

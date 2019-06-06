@@ -323,11 +323,68 @@ class localizatorContent extends xPDOSimpleObject {
             }
         }
 
-        $this->xpdo->removeCollection('locTemplateVarResource', array(
-            'key' => $this->get('key'),
-            'tmplvarid:NOT IN' => $tvids,
-            'contentid' => $this->get('resource_id'),
-        ));
+        if (!empty($tvids)){
+	        $this->xpdo->removeCollection('locTemplateVarResource', array(
+	            'key' => $this->get('key'),
+	            'tmplvarid:NOT IN' => $tvids,
+	            'contentid' => $this->get('resource_id'),
+	        ));
+	    }
+    }
+
+
+    /**
+     * Returns the processed output of a template variable.
+     *
+     * @access public
+     * @param xPDO $xpdo
+     * @param modTemplateVar||int||string $tv template variable element
+     * @param string $value The TV value.
+     * @param integer $resourceId The id of the resource; 0 defaults to the
+     * current resource.
+     * @return mixed The processed output of the template variable.
+     */
+    public static function renderTVOutput(xPDO & $xpdo, $tv, $value = '', $resourceId= 0) {
+        if (!($tv instanceof modTemplateVar)){
+            $byName = !is_numeric($tv);
+
+            $tv = $xpdo->getObject('modTemplateVar', $byName ? array('name' => $tv) : $tv);
+
+            if ($tv == null){
+                return $value;
+            }
+        }
+
+        /* process any TV commands in value */
+        $value= $tv->processBindings($value, $resourceId);
+
+        $params= array ();
+        /**
+         * Backwards support for display_params
+         * @deprecated To be removed in 2.2
+         */
+        if ($paramstring= $tv->get('display_params')) {
+            $tv->xpdo->deprecated('2.2.0', 'Use output_properties instead.', 'modTemplateVar renderOutput display_params');
+            $cp= explode("&", $paramstring);
+            foreach ($cp as $p => $v) {
+                $ar= explode("=", $v);
+                if (is_array($ar) && count($ar) == 2) {
+                    $params[$ar[0]]= $tv->decodeParamValue($ar[1]);
+                }
+            }
+        }
+        /* get output_properties for rendering properties */
+        $outputProperties = $tv->get('output_properties');
+        if (!empty($outputProperties) && is_array($outputProperties)) {
+            $params = array_merge($params,$outputProperties);
+        }
+
+        /* run prepareOutput to allow for custom overriding */
+        $value = $tv->prepareOutput($value, $resourceId);
+
+        /* find the render */
+        $outputRenderPaths = $tv->getRenderDirectories('OnTVOutputRenderList','output');
+        return $tv->getRender($params,$value,$outputRenderPaths,'output',$resourceId,$tv->get('display'));
     }
 
 }

@@ -25,8 +25,11 @@ class localizatorFormProcessor extends modProcessor {
 
         $localizator->working_context = 'web';
 
+        $class_key = 'modDocument'; $richtext = true;
         if ($this->modx->resource = $this->modx->getObject('modResource', $scriptProperties['resource_id'])) {
             $localizator->working_context = $this->modx->resource->get('context_key');
+            $class_key = $this->modx->resource->get('class_key');
+            $richtext = $this->modx->resource->get('richtext');
         }
 
         $controller->loadTemplatesPath();
@@ -47,58 +50,86 @@ class localizatorFormProcessor extends modProcessor {
         $record = $loc->toArray();
 
         $allfields = array();
+        $resourcefields = [
+            [
+                'field' => 'id',
+                'inputTVtype' => 'hidden',
+            ],
+            [
+                'field' => 'key',
+                'caption' => $this->modx->lexicon('localizator_language'),
+                'inputTVtype' => 'listbox',
+                'inputOptionValues' => '@SELECT `name`,`key` FROM `[[+PREFIX]]localizator_languages` WHERE `active` = 1',
+            ],
+            [
+                'field' => 'pagetitle',
+                'caption' => $this->modx->lexicon('resource_pagetitle'),
+            ],
+            [
+                'field' => 'longtitle',
+                'caption' => $this->modx->lexicon('resource_longtitle'),
+            ],
+            [
+                'field' => 'menutitle',
+                'caption' => $this->modx->lexicon('resource_menutitle'),
+            ],
+            [
+                'field' => 'description',
+                'inputTVtype' => 'textarea',
+                'caption' => $this->modx->lexicon('resource_description'),
+            ],
+            [
+                'field' => 'introtext',
+                'inputTVtype' => 'textarea',
+                'caption' => $this->modx->lexicon('introtext'),
+            ],
+            [
+                'field' => 'seotitle',
+                'caption' => $this->modx->lexicon('localizator_seotitle'),
+            ],
+            [
+                'field' => 'keywords',
+                'caption' => $this->modx->lexicon('localizator_keywords'),
+            ],
+        ];
+        /*
+        switch ($class_key){
+            case 'modSymLink':
+            case 'modWebLink':
+                $resourcefields[] = [
+                    'field' => 'content',
+                    'caption' => $this->modx->lexicon(($class_key == 'modWebLink') ? 'weblink' : 'symlink'),
+                    'inputTVtype' => 'textfield',
+                ];
+                break;
+            case 'modStaticResource':
+                $resourcefields[] = [
+                    'field' => 'content',
+                    'caption' => $this->modx->lexicon('static_resource'),
+                    'inputTVtype' => 'file',
+                ];
+                break;
+            default:
+                $resourcefields[] = [
+                    'field' => 'content',
+                    'caption' => $this->modx->lexicon('resource_content'),
+                    'inputTVtype' => $richtext ? 'richtext' : 'textarea',
+                ];
+        }*/
+        if (!in_array($class_key, array('modStaticResource', 'modSymLink', 'modWebLink'))){
+            $resourcefields[] = [
+                'field' => 'content',
+                'caption' => $this->modx->lexicon('resource_content'),
+                'inputTVtype' => $richtext ? 'richtext' : 'textarea',
+            ];
+        }
         $formtabs = [
             'document' => [
                 'caption' => $this->modx->lexicon('document'),
-                'fields' => [
-                    [
-                        'field' => 'id',
-                        'inputTVtype' => 'hidden',
-                    ],
-                    [
-                        'field' => 'key',
-                        'caption' => $this->modx->lexicon('localizator_language'),
-                        'inputTVtype' => 'listbox',
-                        'inputOptionValues' => '@SELECT `name`,`key` FROM `[[+PREFIX]]localizator_languages` WHERE `active` = 1',
-                    ],
-                    [
-                        'field' => 'pagetitle',
-                        'caption' => $this->modx->lexicon('resource_pagetitle'),
-                    ],
-                    [
-                        'field' => 'longtitle',
-                        'caption' => $this->modx->lexicon('resource_longtitle'),
-                    ],
-                    [
-                        'field' => 'menutitle',
-                        'caption' => $this->modx->lexicon('resource_menutitle'),
-                    ],
-                    [
-                        'field' => 'description',
-                        'inputTVtype' => 'textarea',
-                        'caption' => $this->modx->lexicon('resource_description'),
-                    ],
-                    [
-                        'field' => 'introtext',
-                        'inputTVtype' => 'textarea',
-                        'caption' => $this->modx->lexicon('introtext'),
-                    ],
-                    [
-                        'field' => 'seotitle',
-                        'caption' => $this->modx->lexicon('localizator_seotitle'),
-                    ],
-                    [
-                        'field' => 'keywords',
-                        'caption' => $this->modx->lexicon('localizator_keywords'),
-                    ],
-                    [
-                        'field' => 'content',
-                        'caption' => $this->modx->lexicon('resource_content'),
-                        'inputTVtype' => 'richtext',
-                    ],
-                ],
+                'fields' => $resourcefields,
             ],
         ];
+        
         
         foreach ($loc->getTemplateVars() as $tv){
             if (!$tv->checkResourceGroupAccess()) {
@@ -113,7 +144,7 @@ class localizatorFormProcessor extends modProcessor {
             }
             $formtabs[$category_id]['fields'][] = [
                 'field' => $tv->get('name'),
-                'caption' => $tv->get('caption'),
+                'caption' => $tv->get('caption') ? $tv->get('caption') : $tv->get('name'),
                 'description' => $tv->get('description'),
                 'inputTV' => $tv->get('name'),
             ];

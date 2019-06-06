@@ -23,3 +23,6 @@ $_lang['setting_localizator_translate_fields_desc'] = 'Ces champs seront traduit
 
 $_lang['setting_localizator_tv_fields'] = 'Liste des champs supplémentaires (TV)';
 $_lang['setting_localizator_tv_fields_desc'] = 'Ces champs supplémentaires seront disponibles pour l’édition dans la localisation. Laissez le paramètre vide, si vous avez besoin de tous les champs supplémentaires';
+
+$_lang['setting_localizator_check_permissions'] = 'Vérifier les autorisations';
+$_lang['setting_localizator_check_permissions_desc'] = 'Vérifier les autorisations pour modifier la localisation';

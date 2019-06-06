@@ -329,22 +329,46 @@ class localizator
         $q = $this->modx->newQuery('localizatorLanguage');
         $q->where(array(
             array('http_host' => $find),
+            array('OR:http_host:=' => $host . '/'),
             array('OR:http_host:=' => $host),
         ));
-        $q->sortby("FIELD(http_host, '{$find}', '{$host}')");
+        $q->sortby("FIELD(http_host, '{$find}', '{$host}/', '{$host}')");
         $language = $this->modx->getObject('localizatorLanguage', $q);
         if($language) {
+            if (preg_match("/^(http(s):\/\/)/i", $language->http_host)) { 
+                $site_url = $language->http_host;
+            }
+            else
+                $site_url = MODX_URL_SCHEME . $language->http_host;
+
+            if (substr($site_url, -1) != '/'){
+                $site_url .= '/';
+            }
+
+            $base_url = '/';
+            $parse_url = parse_url($site_url);
+            if (isset($parse_url['path'])){
+                $base_url = $parse_url['path'];
+                if (substr($base_url, -1) != '/'){
+                    $base_url .= '/';
+                }
+            }
+
             $this->modx->localizator_key = $language->key;
             $this->modx->setOption('localizator_key', $this->modx->localizator_key);
             $this->modx->setOption('cache_resource_key', 'resource/' . $this->modx->localizator_key);
 
             $this->modx->cultureKey = $cultureKey = ($language->cultureKey ?: $language->key);
             $this->modx->setOption('cultureKey', $cultureKey);
+            $this->modx->setOption('site_url', $site_url);
+            $this->modx->setOption('base_url', $base_url);
 
             $this->modx->setPlaceholders(array(
                 'localizator_key' => $language->key,
                 'cultureKey' => $cultureKey,
-                'site_url' => $_SERVER['REQUEST_SCHEME'] . '://' . $language->http_host,
+                //'site_url' => $_SERVER['REQUEST_SCHEME'] . '://' . $language->http_host,
+                'site_url' => $site_url,
+                'base_url' => $base_url,
             ), '+');
 
             $this->modx->lexicon->load($cultureKey . ':localizator:site');

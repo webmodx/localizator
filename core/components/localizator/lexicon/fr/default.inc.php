@@ -64,3 +64,5 @@ $_lang['localizator_item_err_save'] = 'Une erreur s’est produite lors de l’e
 
 $_lang['localizator_grid_search'] = 'Rechercher';
 $_lang['localizator_grid_actions'] = 'Actions';
+
+$_lang['localizator_content_err_ae'] = 'La localisation de la ressource est déjà renseignée';

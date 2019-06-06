@@ -392,11 +392,9 @@ Ext.extend(MODx.window.UpdatLocalizatorItem,Ext.Window,{
         var fields = Ext.util.JSON.decode(v['mulititems_grid_item_fields']);
         if (fields.length>0){
             for (var i = 0; i < fields.length; i++) {
-                tvid = (fields[i].tv_id);
-                field = Ext.get('tv'+tvid);
-                if (field && typeof(field.onHide) != 'undefined'){
-                    field.onHide();
-                }                  
+                if (Ext.get('tv'+(fields[i].tv_id)) && typeof(Ext.get('tv'+(fields[i].tv_id)).onHide) != 'undefined'){
+                    Ext.get('tv'+(fields[i].tv_id)).onHide();
+                }
             }
         }
         this.destroy();
@@ -409,11 +407,9 @@ Ext.extend(MODx.window.UpdatLocalizatorItem,Ext.Window,{
         //we run onBeforeSubmit on each field, if this function exists. For example for richtext-fields.       
         if (fields.length>0){
             for (var i = 0; i < fields.length; i++) {
-                tvid = (fields[i].tv_id);
-                field = Ext.get('tv'+tvid);
-                if (field && typeof(field.onBeforeSubmit) != 'undefined'){
-                    field.onBeforeSubmit();
-                }                         
+                if (Ext.get('tv'+(fields[i].tv_id)) && typeof(Ext.get('tv'+(fields[i].tv_id)).onBeforeSubmit) != 'undefined'){
+                    Ext.get('tv'+(fields[i].tv_id)).onBeforeSubmit();
+                }
             }
         }	
 
@@ -468,6 +464,8 @@ Ext.extend(MODx.window.UpdatLocalizatorItem,Ext.Window,{
         return new MODx.panel.LocalizatorWindowPanel(config);
     }
     ,onShow: function() {
+        if (this.fp.isloading) return;
+        this.fp.isloading=true;
         this.fp.doAutoLoad();
     }
 
@@ -521,7 +519,7 @@ Ext.extend(MODx.panel.LocalizatorWindowPanel,MODx.FormPanel,{
         tinyMCE.triggerSave(); 
     }
 	,load: function() {
-
+        if (this.isloaded !== true) return '';
         var v = this.getForm().getValues();
         var fields = Ext.util.JSON.decode(v['mulititems_grid_item_fields']);
         var item = {};
@@ -530,13 +528,9 @@ Ext.extend(MODx.panel.LocalizatorWindowPanel,MODx.FormPanel,{
         var field = null;
         if (fields.length>0){
             for (var i = 0; i < fields.length; i++) {
-                
-                tvid = (fields[i].tv_id);
-                field = Ext.get('tv'+tvid);
-                if (field && typeof(field.onLoad) != 'undefined'){
-                    field.onLoad();
-                }                
-			
+                if (Ext.get('tv'+(fields[i].tv_id)) && typeof(Ext.get('tv'+(fields[i].tv_id)).onLoad) != 'undefined'){
+                    Ext.get('tv'+(fields[i].tv_id)).onLoad();
+                }
             }
         }
         

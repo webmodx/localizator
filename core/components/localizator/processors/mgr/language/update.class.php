@@ -5,8 +5,11 @@ class localizatorLanguageUpdateProcessor extends modObjectUpdateProcessor
     public $objectType = 'localizatorLanguage';
     public $classKey = 'localizatorLanguage';
     public $languageTopics = array('localizator');
+    //public $beforeSaveEvent = 'OnBeforeLocalizatorLanguageSave';
+    //public $afterSaveEvent = 'OnLocalizatorLanguageSave';
     //public $permission = 'save';
 
+    protected $old_key = null;
 
     /**
      * We doing special check of permission
@@ -34,21 +37,41 @@ class localizatorLanguageUpdateProcessor extends modObjectUpdateProcessor
             return $this->modx->lexicon('localizator_item_err_ns');
         }
 
-       $key = trim($this->getProperty('key'));
-        if (empty(key)) {
-            $this->modx->error->addField('key', $this->modx->lexicon('localizator_item_err_key'));
-        } elseif ($this->modx->getCount($this->classKey, array('key' => key))) {
-            $this->modx->error->addField('key', $this->modx->lexicon('localizator_item_err_ae'));
+        $key = trim($this->getProperty('key'));
+        if (empty($key)) {
+            $this->modx->error->addField('key', $this->modx->lexicon('localizator_language_err_no_key'));
+        } elseif ($this->modx->getCount($this->classKey, array('key' => $key, 'id:!=' => $id))) {
+            $this->modx->error->addField('key', $this->modx->lexicon('localizator_language_err_key_exist'));
         }
 
-		$http_host = trim($this->getProperty('http_host'));
-        if (empty(http_host)) {
-            $this->modx->error->addField('http_host', $this->modx->lexicon('localizator_item_err_http_host'));
-        } elseif ($this->modx->getCount($this->classKey, array('http_host' => http_host))) {
-            $this->modx->error->addField('http_host', $this->modx->lexicon('localizator_item_err_ae'));
+        $http_host = trim($this->getProperty('http_host'));
+        if (empty($http_host)) {
+            $this->modx->error->addField('http_host', $this->modx->lexicon('localizator_language_err_no_http_host'));
+        } elseif ($this->modx->getCount($this->classKey, array('http_host' => $http_host, 'id:!=' => $id))) {
+            $this->modx->error->addField('http_host', $this->modx->lexicon('localizator_language_err_http_host_exist'));
         }
+
+        $this->old_key = $this->object->get('key');
 
         return parent::beforeSet();
+    }
+
+    public function afterSave()
+    {
+        if ($this->old_key != $this->object->get('key')) {
+            
+            foreach (array('localizatorContent','locTemplateVarResource') as $class){
+                if ($upd = $this->modx->prepare("UPDATE ".$this->modx->getTableName($class)." SET `key` = ? WHERE `key` = ?")){
+                    $upd2->execute(array(
+                        $this->object->get('key'), 
+                        $this->old_key
+                    ));
+                }
+            }
+
+        }
+
+        return true;
     }
 }
 
