@@ -1,4 +1,6 @@
 <?php
+/* @var modX $modx */
+/* @var localizator $localizator */
 $localizator = $modx->getService('localizator');
 switch($modx->event->name) {
     case 'OnDocFormPrerender':
@@ -57,7 +59,7 @@ switch($modx->event->name) {
         } else if (preg_match('/^('.$localizator_key.')\//i', $request)) {
             $request = preg_replace('/^'.$localizator_key.'\//', '', $request);
         }
-        $resource_id = (!$request) ? $modx->getOption('site_start', null, 1) : $modx->findResource($request);
+        $resource_id = (!$request) ? $modx->getOption('site_start', null, 1) : $localizator->findResource($request);
         if($resource_id) {
             $modx->sendForward($resource_id);
         }

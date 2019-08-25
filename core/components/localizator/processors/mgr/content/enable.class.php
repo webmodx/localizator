@@ -1,44 +1,19 @@
 <?php
 
-class localizatorContentEnableProcessor extends modObjectProcessor
+require_once(dirname(__FILE__) . '/update.class.php');
+
+class localizatorContentEnableProcessor extends localizatorContentUpdateProcessor
 {
-    public $objectType = 'localizatorContent';
-    public $classKey = 'localizatorContent';
-    public $languageTopics = array('localizator');
-    public $permission = 'localizatorcontent_save';
-
-    protected $loc_permission;
-
     /**
-     * @return array|string
+     * @return bool
      */
-    public function process()
+    public function beforeSet()
     {
-        $this->loc_permission = $this->modx->getOption('localizator_check_permissions', null, false, true);
+        $this->properties = array(
+            'active' => true,
+        );
 
-        $ids = $this->modx->fromJSON($this->getProperty('ids'));
-        if (empty($ids)) {
-            return $this->failure($this->modx->lexicon('localizator_item_err_ns'));
-        }
-
-        foreach ($ids as $id) {
-            /** @var localizatorContent $object */
-            if (!$object = $this->modx->getObject($this->classKey, $id)) {
-                return $this->failure($this->modx->lexicon('localizator_item_err_nf'));
-            }
-
-            if ($this->loc_permission && 
-                !empty($this->permission) && 
-                !$this->modx->hasPermission($this->permission . '_' . $object->key)
-            ){
-                return $this->failure($this->modx->lexicon('access_denied'));
-            }
-
-            $object->set('active', true);
-            $object->save();
-        }
-
-        return $this->success();
+        return true;
     }
 
 }

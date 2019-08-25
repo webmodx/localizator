@@ -2,7 +2,11 @@
 
 class localizatorContentTranslateProcessor extends modProcessor {
 
+    /* @var localizator $localizator */
+    public $localizator;
+
     public function process() {
+
 		$this->localizator = $this->modx->getService('localizator');
 
 		if (!$resource_id = $this->getProperty('resource_id')) {
@@ -13,6 +17,7 @@ class localizatorContentTranslateProcessor extends modProcessor {
 			return $this->failure('Не указана опция localizator_default_language, невозможно определить исходный языка для перевода');
 		}
 
+		/* @var localizatorContent $default_content */
 		$default_content = $this->modx->getObject('localizatorContent', array('key' => $default_language, 'resource_id' => $resource_id));
 		if(!$default_content) {
 			return $this->failure('Для автоматического перевода необходимо добавить хотя бы одну запись в таблицу');
@@ -53,48 +58,73 @@ class localizatorContentTranslateProcessor extends modProcessor {
 
 			//$this->modx->log(1, 'Перевод на ' . $language->key . ' - ' . $resource_id);
 
+            /* @var localizatorContent $content */
 			$content = $this->modx->getObject('localizatorContent', array('key' => $language->key, 'resource_id' => $resource_id));
 			if($content && $translate_translated) {
+				$contentData = $content->toArray();
+
 				foreach($translate_fields as $field) {
 					$current = $content->get($field);
 					$val = $default_content->get($field);
 					if(empty($val)) continue;
 					if(empty($current) || !empty($current) && $translate_translated_fields) {
-						//$content->set($field, $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key)));
 						if (isset($this->modx->map['localizatorContent']['fieldMeta'][$field])){
-							$content->set($field, $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key)));
+							$contentData[$field] = $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key));
 						}
 						elseif (isset($defaultTVs[$field])){
 							if ($tv = $this->modx->getObject('modTemplateVar', ['name' => $field])){
 								$tv->set('value', $val);
-								$content->set($field, $this->translateTV($tv, $default_language, ($language->cultureKey ?: $language->key)));
+								$contentData[$field] = $this->translateTV($tv, $default_language, ($language->cultureKey ?: $language->key));
 							}
 						}
 					}
 				}
-				$content->save();
+				$response = $this->modx->runProcessor('mgr/content/update', 
+	                $contentData, 
+	                array(
+	                    'processors_path' => $this->localizator->config['processorsPath']
+	            	)
+	            );
+	            if ($response->isError()) {
+	                return $response->getResponse();
+	            }
+
 			} else if(!$content) {
+				/*
 				$content = $this->modx->newObject('localizatorContent');
 				$content->fromArray(array(
 					'key' => $language->key,
 					'resource_id' => $resource_id,
 					'active' => 1,
-				));
+				));*/
+				$contentData = array(
+					'key' => $language->key,
+					'resource_id' => $resource_id,
+					'active' => 1,
+				);
 				foreach($translate_fields as $field) {
 					$val = $default_content->get($field);
 					if(!empty($val)) {
 						if (isset($this->modx->map['localizatorContent']['fieldMeta'][$field])){
-							$content->set($field, $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key)));
+							$contentData[$field] = $this->localizator->translator_Yandex($val, $default_language, ($language->cultureKey ?: $language->key));
 						}
 						elseif (isset($defaultTVs[$field])){
 							if ($tv = $this->modx->getObject('modTemplateVar', ['name' => $field])){
 								$tv->set('value', $val);
-								$content->set($field, $this->translateTV($tv, $default_language, ($language->cultureKey ?: $language->key)));
+								$contentData[$field] = $this->translateTV($tv, $default_language, ($language->cultureKey ?: $language->key));
 							}
 						}
 					}
 				}
-				$content->save();
+				$response = $this->modx->runProcessor('mgr/content/create', 
+	                $contentData, 
+	                array(
+	                    'processors_path' => $this->localizator->config['processorsPath']
+	            	)
+	            );
+	            if ($response->isError()) {
+	                return $response->getResponse();
+	            }
 			}
 
 			$start++;

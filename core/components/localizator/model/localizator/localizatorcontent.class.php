@@ -208,8 +208,7 @@ class localizatorContent extends xPDOSimpleObject {
     }
 
     /**
-     * All json fields of product are synchronized with msProduct Options
-     *
+     * 
      * @param null $cacheFlag
      *
      * @return bool
@@ -387,4 +386,23 @@ class localizatorContent extends xPDOSimpleObject {
         return $tv->getRender($params,$value,$outputRenderPaths,'output',$resourceId,$tv->get('display'));
     }
 
+    /**
+     * @param array $ancestors
+     *
+     * @return bool
+     */
+    public function remove(array $ancestors = array())
+    {
+
+        $tvs = $this->xpdo->getIterator('locTemplateVarResource', array(
+            'key' => $this->get('key'),
+            'contentid' => $this->get('resource_id'),
+        ));
+        /** @var locTemplateVarResource $tv */
+        foreach ($tvs as $tv) {
+            $tv->remove();
+        }
+
+        return parent::remove($ancestors);
+    }
 }

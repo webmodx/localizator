@@ -68,8 +68,6 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
             },
             this
         );
-
-
     },
 
 	_translation: function (start) {
@@ -116,74 +114,61 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
         });
     },
 
+    сontentAction: function (method) {
+        var ids = this._getSelectedIds();
+        if (!ids.length) {
+            return false;
+        }
+        MODx.Ajax.request({
+            url: localizator.config.connector_url,
+            params: {
+                action: 'mgr/content/multiple',
+                method: method,
+                ids: Ext.util.JSON.encode(ids),
+            },
+            listeners: {
+                success: {
+                    fn: function () {
+                        //noinspection JSUnresolvedFunction
+                        this.refresh();
+                    }, scope: this
+                },
+                failure: {
+                    fn: function (response) {
+                        MODx.msg.alert(_('error'), response.message);
+                    }, scope: this
+                },
+            }
+        })
+    },
+
     removeItem: function () {
         var ids = this._getSelectedIds();
         if (!ids.length) {
             return false;
         }
-        MODx.msg.confirm({
-            title: ids.length > 1
+
+        Ext.MessageBox.confirm(
+            ids.length > 1
                 ? _('localizator_items_remove')
                 : _('localizator_item_remove'),
-            text: ids.length > 1
+            ids.length > 1
                 ? _('localizator_items_remove_confirm')
                 : _('localizator_item_remove_confirm'),
-            url: this.config.url,
-            params: {
-                action: 'mgr/content/remove',
-                ids: Ext.util.JSON.encode(ids),
-            },
-            listeners: {
-                success: {
-                    fn: function () {
-                        this.refresh();
-                    }, scope: this
+            function (val) {
+                if (val == 'yes') {
+                    this.сontentAction('remove');
                 }
-            }
-        });
-        return true;
+            }, this
+        );
     },
 
     disableItem: function () {
-        var ids = this._getSelectedIds();
-        if (!ids.length) {
-            return false;
-        }
-        MODx.Ajax.request({
-            url: this.config.url,
-            params: {
-                action: 'mgr/content/disable',
-                ids: Ext.util.JSON.encode(ids),
-            },
-            listeners: {
-                success: {
-                    fn: function () {
-                        this.refresh();
-                    }, scope: this
-                }
-            }
-        })
+        this.сontentAction('disable');
     },
 
     enableItem: function () {
-        var ids = this._getSelectedIds();
-        if (!ids.length) {
-            return false;
-        }
-        MODx.Ajax.request({
-            url: this.config.url,
-            params: {
-                action: 'mgr/content/enable',
-                ids: Ext.util.JSON.encode(ids),
-            },
-            listeners: {
-                success: {
-                    fn: function () {
-                        this.refresh();
-                    }, scope: this
-                }
-            }
-        })
+        this.сontentAction('enable');
     },
 
     getFields: function () {
@@ -296,6 +281,7 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
     loadCreateWin: function(btn,e) {
         return this._loadWin(btn,e,0);
     },
+
     loadUpdateWin: function(btn,e) {
         if (typeof(row) != 'undefined') {
             this.menu.record = row.data;
@@ -310,13 +296,15 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
     _loadWin: function(btn,e, loc_id) {
         var resource_id = this.config.resource_id;
 
-        var input_prefix = Ext.id(null,'inp_');
-
         var win_xtype = 'modx-window-localizator-item-content';
+
+        var w = Ext.getCmp(win_xtype);
+        if (w) {
+            w.hide().getEl().remove();
+        }
+
         this.windows[win_xtype] = null;
         var action = 'mgr/fields';
-        var co_id = '';
-        var object_id = '';
         this.loadWindow(btn,e,{
     		url: localizator.config.connector_url
             ,xtype: win_xtype
@@ -326,10 +314,7 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
                 action: action,
                 resource_id : resource_id,
                 loc_id : loc_id,
-                input_prefix: input_prefix,
-	            object_id: object_id,
-	            co_id: co_id,
-                win_id: input_prefix + win_xtype
+                win_id: win_xtype
             }
         });
     }
@@ -468,20 +453,18 @@ Ext.extend(MODx.window.UpdatLocalizatorItem,Ext.Window,{
         this.fp.isloading=true;
         this.fp.doAutoLoad();
     }
-
 });
-Ext.reg('modx-window-localizator-item-content',MODx.window.UpdatLocalizatorItem);
-
+Ext.reg('modx-window-localizator-item-content', MODx.window.UpdatLocalizatorItem);
 
 MODx.panel.LocalizatorWindowPanel = function(config) {
     config = config || {};
     Ext.applyIf(config,{
-        id: 'xdbedit-panel-object-Localizator'
+        id: 'localizator-panel-object'
 		,title: ''
         ,url: config.url
         ,baseParams: config.baseParams	
         ,class_key: ''
-        ,bodyStyle: 'padding: 15px;'
+        ,bodyStyle: 'padding: 5px;'
         //,autoSize: true
         ,autoLoad: this.autoload(config)
         ,width: '950'
@@ -541,4 +524,4 @@ Ext.extend(MODx.panel.LocalizatorWindowPanel,MODx.FormPanel,{
 		return '';
 	 }
 });
-Ext.reg('xdbedit-panel-object',MODx.panel.LocalizatorWindowPanel);
+Ext.reg('localizator-panel-object', MODx.panel.LocalizatorWindowPanel);

@@ -5,6 +5,8 @@ class localizatorContentCreateProcessor extends modObjectCreateProcessor
     public $objectType = 'localizatorContent';
     public $classKey = 'localizatorContent';
     public $languageTopics = array('localizator');
+    public $beforeSaveEvent = 'OnBeforeSaveLocalization';
+    public $afterSaveEvent = 'OnSaveLocalization';
     public $permission = '';
 
     function __construct(modX & $modx,array $properties = array()) {
@@ -15,7 +17,11 @@ class localizatorContentCreateProcessor extends modObjectCreateProcessor
                 $this->setProperty(substr($key, 14), $value);
                 $this->unsetProperty($key);
             }
+            if (strpos($key, 'tvbrowserlocalizator_') !== false){
+                $this->unsetProperty($key);
+            }
         }
+        $this->unsetProperty('action');
     }
 
     public function checkPermissions() {

@@ -5,8 +5,8 @@ class localizatorLanguageUpdateProcessor extends modObjectUpdateProcessor
     public $objectType = 'localizatorLanguage';
     public $classKey = 'localizatorLanguage';
     public $languageTopics = array('localizator');
-    //public $beforeSaveEvent = 'OnBeforeLocalizatorLanguageSave';
-    //public $afterSaveEvent = 'OnLocalizatorLanguageSave';
+    public $beforeSaveEvent = 'OnBeforeSaveLocalizatorLanguage';
+    public $afterSaveEvent = 'OnSaveLocalizatorLanguage';
     //public $permission = 'save';
 
     protected $old_key = null;

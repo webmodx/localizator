@@ -1,12 +1,10 @@
 <?php
-//ini_set("display_errors",1);
-//error_reporting(E_ALL);
 /**
- * Loads the TV panel for MIGX.
+ * Loads the Tabs panel for Localizator.
  *
  * Note: This page is not to be accessed directly.
  *
- * @package migx
+ * @package localizator
  * @subpackage processors
  */
 
@@ -25,11 +23,17 @@ class localizatorFormProcessor extends modProcessor {
 
         $localizator->working_context = 'web';
 
-        $class_key = 'modDocument'; $richtext = true;
+        $which_editor = $this->modx->getOption('which_editor', null, false, true);
+        
+
+        $class_key = 'modDocument'; $richtext = false;
         if ($this->modx->resource = $this->modx->getObject('modResource', $scriptProperties['resource_id'])) {
             $localizator->working_context = $this->modx->resource->get('context_key');
             $class_key = $this->modx->resource->get('class_key');
-            $richtext = $this->modx->resource->get('richtext');
+
+            if ($which_editor != false){
+                $richtext = $this->modx->resource->get('richtext');
+            }
         }
 
         $controller->loadTemplatesPath();
@@ -37,6 +41,7 @@ class localizatorFormProcessor extends modProcessor {
         $controller->setPlaceholder('_config', $this->modx->config);
         $this->modx->lexicon->load('core:resource');
         $this->modx->lexicon->load('core:default');
+        $this->modx->lexicon->load('core:formcustomization');
 
         /*actual record */
         if ($loc = $this->modx->getObject('localizatorContent', $scriptProperties['loc_id'])){
@@ -47,108 +52,115 @@ class localizatorFormProcessor extends modProcessor {
             $loc->set('resource_id', $scriptProperties['resource_id']);
             $scriptProperties['isnew'] = 1;
         }
-        $record = $loc->toArray();
 
         $allfields = array();
-        $resourcefields = [
-            [
-                'field' => 'id',
+
+        $resourcefields = array(
+            'id' => array(
                 'inputTVtype' => 'hidden',
-            ],
-            [
-                'field' => 'key',
+            ),
+            'key' => array(
                 'caption' => $this->modx->lexicon('localizator_language'),
                 'inputTVtype' => 'listbox',
                 'inputOptionValues' => '@SELECT `name`,`key` FROM `[[+PREFIX]]localizator_languages` WHERE `active` = 1',
-            ],
-            [
-                'field' => 'pagetitle',
-                'caption' => $this->modx->lexicon('resource_pagetitle'),
-            ],
-            [
-                'field' => 'longtitle',
-                'caption' => $this->modx->lexicon('resource_longtitle'),
-            ],
-            [
-                'field' => 'menutitle',
-                'caption' => $this->modx->lexicon('resource_menutitle'),
-            ],
-            [
-                'field' => 'description',
+            ),
+            'pagetitle' => array(),
+            'longtitle' => array(),
+            'menutitle' => array(),
+            'description' => array(
                 'inputTVtype' => 'textarea',
-                'caption' => $this->modx->lexicon('resource_description'),
-            ],
-            [
-                'field' => 'introtext',
+            ),
+            'introtext' => array(
                 'inputTVtype' => 'textarea',
                 'caption' => $this->modx->lexicon('introtext'),
-            ],
-            [
-                'field' => 'seotitle',
+            ),
+            'seotitle' => array(
                 'caption' => $this->modx->lexicon('localizator_seotitle'),
-            ],
-            [
-                'field' => 'keywords',
+            ),
+            'keywords' => array(
                 'caption' => $this->modx->lexicon('localizator_keywords'),
-            ],
-        ];
-        /*
-        switch ($class_key){
-            case 'modSymLink':
-            case 'modWebLink':
-                $resourcefields[] = [
-                    'field' => 'content',
-                    'caption' => $this->modx->lexicon(($class_key == 'modWebLink') ? 'weblink' : 'symlink'),
-                    'inputTVtype' => 'textfield',
-                ];
-                break;
-            case 'modStaticResource':
-                $resourcefields[] = [
-                    'field' => 'content',
-                    'caption' => $this->modx->lexicon('static_resource'),
-                    'inputTVtype' => 'file',
-                ];
-                break;
-            default:
-                $resourcefields[] = [
-                    'field' => 'content',
-                    'caption' => $this->modx->lexicon('resource_content'),
-                    'inputTVtype' => $richtext ? 'richtext' : 'textarea',
-                ];
-        }*/
+            ),
+        );
         if (!in_array($class_key, array('modStaticResource', 'modSymLink', 'modWebLink'))){
-            $resourcefields[] = [
-                'field' => 'content',
-                'caption' => $this->modx->lexicon('resource_content'),
+            $resourcefields['content'] = array(
                 'inputTVtype' => $richtext ? 'richtext' : 'textarea',
-            ];
+            );
         }
-        $formtabs = [
-            'document' => [
-                'caption' => $this->modx->lexicon('document'),
-                'fields' => $resourcefields,
-            ],
-        ];
-        
+
+        foreach ($resourcefields as $key => &$values){
+            $values = array_merge(array(
+                'field' => $key,
+                'caption' => $this->modx->lexicon("resource_{$key}"),
+                'inputTVtype' => 'text',
+            ), $values);
+        }
+
+        $tvtabs = array();
+
+        /* get categories */
+        $c = $this->modx->newQuery('modCategory');
+        $c->sortby('rank', 'ASC');
+        $c->sortby('category','ASC');
+        $cats = $this->modx->getCollection('modCategory',$c);
+        /** @var modCategory $cat */
+        foreach ($cats as $cat) {
+            $tvtabs[$cat->get('id')] = array(
+                'caption' => $cat->get('category'),
+                'fields' => array(),
+            );
+        }
+
+        $tvtabs[0] = array(
+            'caption' => ucfirst($this->modx->lexicon('uncategorized')),
+            'fields' => array(),
+        );
+
+        //$tvkeys = $loc->getTVKeys();
         
         foreach ($loc->getTemplateVars() as $tv){
             if (!$tv->checkResourceGroupAccess()) {
                 continue;
             }
-            $category_id = $tv->get('category_id');
-            if (!isset($formtabs[$category_id])){
-                $formtabs[$category_id]= [
-                    'caption' => $tv->get('category_name') ? $tv->get('category_name') : $this->modx->lexicon('no_category'),
-                    'fields' => [],
-                ];
-            }
-            $formtabs[$category_id]['fields'][] = [
+
+            $tvtabs[$tv->get('category')]['fields'][] = array(
                 'field' => $tv->get('name'),
                 'caption' => $tv->get('caption') ? $tv->get('caption') : $tv->get('name'),
                 'description' => $tv->get('description'),
                 'inputTV' => $tv->get('name'),
-            ];
+            );
         }
+
+        $tvtabs = array_filter($tvtabs, function($var){
+            return (count($var['fields']) > 0);
+        });
+
+        $formtabs = array(
+            'document' => array(
+                'caption' => $this->modx->lexicon('document'),
+                'tabs' => array(
+                    'document' => array(
+                        'caption' => $this->modx->lexicon('document'),
+                        'fields' => array_values($resourcefields),
+                    ),
+                ),
+            ),
+        );
+
+        if (!empty($tvtabs)){
+            $formtabs['tvs'] = array(
+                'caption' => $this->modx->lexicon('tvs'),
+                'tabs' => $tvtabs,
+            );
+        }
+
+        $response = $localizator->invokeEvent('OnBuildLocalizationTabs', array(
+            'localizatorContent' => &$loc,
+            'tabs' => $formtabs,
+        ));
+        if ($response['success']) {
+            $formtabs = $response['data']['tabs'];
+        }
+        $record = $loc->toArray();
 
         $categories = array();
         $result = $localizator->createForm($formtabs, $record, $allfields, $categories, $scriptProperties);
@@ -157,14 +169,15 @@ class localizatorFormProcessor extends modProcessor {
             $controller->setPlaceholder('error', $result['error']);
         }
         
-        $controller->setPlaceholder('formcaption', '');
+        //$controller->setPlaceholder('formcaption', '');
         $controller->setPlaceholder('fields', $this->modx->toJSON($allfields));
         $controller->setPlaceholder('categories', $categories);
         $controller->setPlaceholder('resource_id', $loc->get('resource_id'));
         $controller->setPlaceholder('formAction', $scriptProperties['isnew'] ? 'create' : 'update');
         $controller->setPlaceholder('properties', $scriptProperties);
-        //Todo: check for MIGX and MIGXdb, if tv_id is needed.
+        
         $controller->setPlaceholder('win_id', $scriptProperties['win_id']);
+        $controller->setPlaceholder('tvcount', count($resourcefields));
 
         if (!empty($_REQUEST['showCheckbox'])) {
             $controller->setPlaceholder('showCheckbox', 1);

@@ -10,7 +10,7 @@ class pdoFetchLocalizator extends pdoFetch
     {
         parent::addTVs();
 
-        if ($this->config['localizatorTVs'] && $this->config['tvsJoin']){
+        if (isset($this->config['localizatorTVs']) && !empty($this->config['localizatorTVs']) && $this->config['tvsJoin']){
         	foreach ($this->config['localizatorTVs'] as $name){
                 $name = strtolower($name);
                 $alias = 'TV' . $name;
@@ -30,7 +30,7 @@ class pdoFetchLocalizator extends pdoFetch
      */
     public function prepareRows(array $rows = array())
     {
-        if ($this->config['localizatorTVs'] && 
+        if (isset($this->config['localizatorTVs']) && !empty($this->config['localizatorTVs']) && 
             (!empty($this->config['includeTVs']) && (!empty($this->config['prepareTVs']) || !empty($this->config['processTVs'])))
         ){
             $tvs = array_map('trim', explode(',', $this->config['includeTVs']));

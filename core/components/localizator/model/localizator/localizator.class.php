@@ -93,177 +93,188 @@ class localizator
         $rte = isset($scriptProperties['which_editor']) ? $scriptProperties['which_editor'] : $this->modx->getOption('which_editor', '', $this->modx->_userConfig);
         
 
-        foreach ($tabs as $tabid => $tab) {
-            $tvs = array();
-            $fields = $this->modx->getOption('fields', $tab, array());
-            $fields = is_array($fields) ? $fields : $this->modx->fromJson($fields);
-            if (is_array($fields) && count($fields) > 0) {
+        foreach ($tabs as $tabid => $subtab) {
+            $tabs =array();
+            foreach ($subtab['tabs'] as $subtabid => $tab) {
+                $tvs = array();
+                $fields = $this->modx->getOption('fields', $tab, array());
+                $fields = is_array($fields) ? $fields : $this->modx->fromJson($fields);
+                if (is_array($fields) && count($fields) > 0) {
 
-                foreach ($fields as &$field) {
+                    foreach ($fields as &$field) {
 
-                    $fieldname = $this->modx->getOption('field', $field, '');
-                    $useDefaultIfEmpty = $this->modx->getOption('useDefaultIfEmpty', $field, 0);
+                        $fieldname = $this->modx->getOption('field', $field, '');
+                        $useDefaultIfEmpty = $this->modx->getOption('useDefaultIfEmpty', $field, 0);
 
-                    /*generate unique tvid, must be numeric*/
-                    /*todo: find a better solution*/
-                    $field['tv_id'] = 'localizator_'.$fieldname;
-                    $params = array();
-                    $tv = false;
+                        /*generate unique tvid, must be numeric*/
+                        /*todo: find a better solution*/
+                        $field['tv_id'] = 'localizator_'.$fieldname;
+                        $params = array();
+                        $tv = false;
 
 
-                    if (isset($field['inputTV']) && $tv = $this->modx->getObject('modTemplateVar', array('name' => $field['inputTV']))) {
-                        $params = $tv->get('input_properties');
-                        $params['inputTVid'] = $tv->get('id');
-                    }
+                        if (isset($field['inputTV']) && $tv = $this->modx->getObject('modTemplateVar', array('name' => $field['inputTV']))) {
+                            $params = $tv->get('input_properties');
+                            $params['inputTVid'] = $tv->get('id');
+                        }
 
-                    if (!empty($field['inputTVtype'])) {
-                        $tv = $this->modx->newObject('modTemplateVar');
-                        $tv->set('type', $field['inputTVtype']);
-                    }
+                        if (!empty($field['inputTVtype'])) {
+                            $tv = $this->modx->newObject('modTemplateVar');
+                            $tv->set('type', $field['inputTVtype']);
+                        }
 
-                    if (!$tv) {
-                        $tv = $this->modx->newObject('modTemplateVar');
-                        $tv->set('type', 'text');
-                    }
+                        if (!$tv) {
+                            $tv = $this->modx->newObject('modTemplateVar');
+                            $tv->set('type', 'text');
+                        }
 
-                    $o_type = $tv->get('type');
-                    
-                    if ($tv->get('type') == 'richtext') {
-                        $tv->set('type', 'migx' . str_replace(' ','_',strtolower($rte)));
-                    }
+                        $tv->set('name', ($fieldname == 'content' ? 'localizator_content' : $fieldname));
 
-                    //we change the phptype, that way we can use any id, not only integers (issues on windows-systems with big integers!)
-                    $tv->_fieldMeta['id']['phptype'] = 'string';
+                        $o_type = $tv->get('type');
+                        
+                        if ($tv->get('type') == 'richtext') {
+                            $tv->set('type', 'migx' . str_replace(' ','_',strtolower($rte)));
+                        }
 
-                    if (!empty($field['inputOptionValues'])) {
-                        $tv->set('elements', $field['inputOptionValues']);
-                    }
-                    if (!empty($field['default'])) {
-                        $tv->set('default_text', $tv->processBindings($field['default']));
-                    }
-                    if (isset($field['display'])) {
-                        $tv->set('display', $field['display']);
-                    }
-                    if (!empty($field['configs'])) {
-                        $cfg = $this->modx->fromJson($field['configs']);
-                        if (is_array($cfg)) {
-                            $params = array_merge($params, $cfg);
+                        //we change the phptype, that way we can use any id, not only integers (issues on windows-systems with big integers!)
+                        $tv->_fieldMeta['id']['phptype'] = 'string';
+
+                        if (!empty($field['inputOptionValues'])) {
+                            $tv->set('elements', $field['inputOptionValues']);
+                        }
+                        if (!empty($field['default'])) {
+                            $tv->set('default_text', $tv->processBindings($field['default']));
+                        }
+                        if (isset($field['display'])) {
+                            $tv->set('display', $field['display']);
+                        }
+                        if (!empty($field['configs'])) {
+                            $cfg = $this->modx->fromJson($field['configs']);
+                            if (is_array($cfg)) {
+                                $params = array_merge($params, $cfg);
+                            } else {
+                                $params['configs'] = $field['configs'];
+                            }
+                        }
+
+                        /*insert actual value from requested record, convert arrays to ||-delimeted string */
+                        $fieldvalue = '';
+                        if (isset($record[$fieldname])) {
+                            $fieldvalue = $record[$fieldname];
+                            if (is_array($fieldvalue)) {
+                                $fieldvalue = is_array($fieldvalue[0]) ? $this->modx->toJson($fieldvalue) : implode('||', $fieldvalue);
+                            }
+                        }
+
+                        $tv->set('value', $fieldvalue);
+
+                        if (!empty($field['caption'])) {
+                            $field['caption'] = htmlentities($field['caption'], ENT_QUOTES, $this->modx->getOption('modx_charset'));
+                            $tv->set('caption', $field['caption']);
+                        }
+
+
+
+                        $desc = '';
+                        if (!empty($field['description'])) {
+                            $desc = $field['description'];
+                            $field['description'] = htmlentities($field['description'], ENT_QUOTES, $this->modx->getOption('modx_charset'));
+                            $tv->set('description', $field['description']);
+                        }
+
+                        
+                        $allfield = array();
+                        $allfield['field'] = $fieldname;
+                        $allfield['tv_id'] = $field['tv_id'];
+                        $allfield['array_tv_id'] = $field['tv_id'] . '[]';
+                        $allfields[] = $allfield;
+
+                        $field['array_tv_id'] = $field['tv_id'] . '[]';
+                        $mediasource = $this->getFieldSource($field, $tv);
+                        
+                        $tv->setSource($mediasource);
+                        $tv->set('id', $field['tv_id']);
+
+                        /*
+                        $default = $tv->processBindings($tv->get('default_text'), $resourceId);
+                        if (strpos($tv->get('default_text'), '@INHERIT') > -1 && (strcmp($default, $tv->get('value')) == 0 || $tv->get('value') == null)) {
+                        $tv->set('inherited', true);
+                        }
+                        */
+
+                        $isnew = $this->modx->getOption('isnew', $scriptProperties, 0);
+                        $isduplicate = $this->modx->getOption('isduplicate', $scriptProperties, 0);
+
+
+                        if (!empty($useDefaultIfEmpty)) {
+                            //old behaviour minus use now default values for checkboxes, if new record
+                            if ($tv->get('value') == null) {
+                                $v = $tv->get('default_text');
+                                if ($tv->get('type') == 'checkbox' && $tv->get('value') == '') {
+                                    if (!empty($isnew) && empty($isduplicate)) {
+                                        $v = $tv->get('default_text');
+                                    } else {
+                                        $v = '';
+                                    }
+                                }
+                                $tv->set('value', $v);
+                            }
                         } else {
-                            $params['configs'] = $field['configs'];
+                            //set default value, only on new records
+                            if (!empty($isnew) && empty($isduplicate)) {
+                                $v = $tv->get('default_text');
+                                $tv->set('value', $v);
+                            }
                         }
-                    }
 
-                    /*insert actual value from requested record, convert arrays to ||-delimeted string */
-                    $fieldvalue = '';
-                    if (isset($record[$fieldname])) {
-                        $fieldvalue = $record[$fieldname];
-                        if (is_array($fieldvalue)) {
-                            $fieldvalue = is_array($fieldvalue[0]) ? $this->modx->toJson($fieldvalue) : implode('||', $fieldvalue);
+
+                        $this->modx->smarty->assign('tv', $tv);
+
+                        if (!isset($params['allowBlank']))
+                            $params['allowBlank'] = 1;
+
+                        $value = $tv->get('value');
+                        if ($value === null) {
+                            $value = $tv->get('default_text');
                         }
-                    }
 
-                    $tv->set('value', $fieldvalue);
+                        $this->modx->smarty->assign('params', $params);
+                        /* find the correct renderer for the TV, if not one, render a textbox */
+                        $inputRenderPaths = $tv->getRenderDirectories('OnTVInputRenderList', 'input');
 
-                    if (!empty($field['caption'])) {
-                        $field['caption'] = htmlentities($field['caption'], ENT_QUOTES, $this->modx->getOption('modx_charset'));
-                        $tv->set('caption', $field['caption']);
-                    }
-
-
-
-                    $desc = '';
-                    if (!empty($field['description'])) {
-                        $desc = $field['description'];
-                        $field['description'] = htmlentities($field['description'], ENT_QUOTES, $this->modx->getOption('modx_charset'));
-                        $tv->set('description', $field['description']);
-                    }
-
-                    
-                    $allfield = array();
-                    $allfield['field'] = $fieldname;
-                    $allfield['tv_id'] = $field['tv_id'];
-                    $allfield['array_tv_id'] = $field['tv_id'] . '[]';
-                    $allfields[] = $allfield;
-
-                    $field['array_tv_id'] = $field['tv_id'] . '[]';
-                    $mediasource = $this->getFieldSource($field, $tv);
-                    
-                    $tv->setSource($mediasource);
-                    $tv->set('id', $field['tv_id']);
-
-                    /*
-                    $default = $tv->processBindings($tv->get('default_text'), $resourceId);
-                    if (strpos($tv->get('default_text'), '@INHERIT') > -1 && (strcmp($default, $tv->get('value')) == 0 || $tv->get('value') == null)) {
-                    $tv->set('inherited', true);
-                    }
-                    */
-
-                    $isnew = $this->modx->getOption('isnew', $scriptProperties, 0);
-                    $isduplicate = $this->modx->getOption('isduplicate', $scriptProperties, 0);
-
-
-                    if (!empty($useDefaultIfEmpty)) {
-                        //old behaviour minus use now default values for checkboxes, if new record
-                        if ($tv->get('value') == null) {
-                            $v = $tv->get('default_text');
-                            if ($tv->get('type') == 'checkbox' && $tv->get('value') == '') {
-                                if (!empty($isnew) && empty($isduplicate)) {
-                                    $v = $tv->get('default_text');
-                                } else {
-                                    $v = '';
+                        if ($o_type == 'richtext') {
+                            $fallback = true;
+                            foreach ($inputRenderPaths as $path) {
+                                $renderFile = $path . $tv->get('type') . '.class.php';
+                                if (file_exists($renderFile)) {
+                                    $fallback = false;
+                                    break;
                                 }
                             }
-                            $tv->set('value', $v);
-                        }
-                    } else {
-                        //set default value, only on new records
-                        if (!empty($isnew) && empty($isduplicate)) {
-                            $v = $tv->get('default_text');
-                            $tv->set('value', $v);
-                        }
-                    }
-
-
-                    $this->modx->smarty->assign('tv', $tv);
-
-                    if (!isset($params['allowBlank']))
-                        $params['allowBlank'] = 1;
-
-                    $value = $tv->get('value');
-                    if ($value === null) {
-                        $value = $tv->get('default_text');
-                    }
-
-                    $this->modx->smarty->assign('params', $params);
-                    /* find the correct renderer for the TV, if not one, render a textbox */
-                    $inputRenderPaths = $tv->getRenderDirectories('OnTVInputRenderList', 'input');
-
-                    if ($o_type == 'richtext') {
-                        $fallback = true;
-                        foreach ($inputRenderPaths as $path) {
-                            $renderFile = $path . $tv->get('type') . '.class.php';
-                            if (file_exists($renderFile)) {
-                                $fallback = false;
-                                break;
+                            if ($fallback) {
+                                $tv->set('type', 'textarea');
                             }
                         }
-                        if ($fallback) {
-                            $tv->set('type', 'textarea');
-                        }
-                    }
 
-                    $inputForm = $tv->getRender($params, $value, $inputRenderPaths, 'input', null, $tv->get('type'));
-                    $tv->set('formElement', $inputForm);
-                    $tvs[] = $tv;
+                        $inputForm = $tv->getRender($params, $value, $inputRenderPaths, 'input', null, $tv->get('type'));
+                        $tv->set('formElement', $inputForm);
+                        $tvs[] = $tv;
+                    }
                 }
+                $tabs[] = array(
+                    'category' => $this->modx->getOption('caption', $tab, 'undefined'),
+                    'print_before_tabs' => (isset($tab['print_before_tabs']) && !empty($tab['print_before_tabs']) ? true : false),
+                    'id' => $subtabid,
+                    'tvs' => $tvs,
+                );
             }
 
-            $cat = array();
-            $cat['category'] = $this->modx->getOption('caption', $tab, 'undefined');
-            $cat['print_before_tabs'] = isset($tab['print_before_tabs']) && !empty($tab['print_before_tabs']) ? true : false;
-            $cat['id'] = $tabid;
-            $cat['tvs'] = $tvs;
-            $categories[] = $cat;
+            $categories[] = array(
+                'category' => $this->modx->getOption('caption', $subtab, 'undefined'),
+                'print_before_tabs' => (isset($subtab['print_before_tabs']) && !empty($subtab['print_before_tabs']) ? true : false),
+                'id' => $tabid,
+                'tabs' => $tabs,
+            );
 
         }
 
@@ -316,26 +327,41 @@ class localizator
     }
 
     function findLocalization($http_host, &$request){
-        $host = $find = $http_host;
-        if($request) {
-            if(strpos($request, '/') !== false) {
-                // "site.com/en/blog/article" to "site.com/en/"
-                $tmp = explode('/', $request);
-                $find = $host . '/' . $tmp[0] . '/';
-            } else {
-                $find = $host . '/' . $request;
-            }
-        }
-        $q = $this->modx->newQuery('localizatorLanguage');
-        $q->where(array(
-            array('http_host' => $find),
-            array('OR:http_host:=' => $host . '/'),
-            array('OR:http_host:=' => $host),
+        /* @var localizatorLanguage $language */
+        $language = null;
+
+        $response = $this->invokeEvent('OnBeforeFindLocalization', array(
+            'language' => &$language,
+            'http_host' => $http_host,
+            'request' => $request,
         ));
-        $q->sortby("FIELD(http_host, '{$find}', '{$host}/', '{$host}')");
-        $language = $this->modx->getObject('localizatorLanguage', $q);
-        if($language) {
-            if (preg_match("/^(http(s):\/\/)/i", $language->http_host)) { 
+        if (!$response['success']) {
+            return $response['message'];
+        }
+
+        if (!$language) {
+            $host = $find = $http_host;
+            if($request) {
+                if(strpos($request, '/') !== false) {
+                    // "site.com/en/blog/article" to "site.com/en/"
+                    $tmp = explode('/', $request);
+                    $find = $host . '/' . $tmp[0] . '/';
+                } else {
+                    $find = $host . '/' . $request;
+                }
+            }
+            $q = $this->modx->newQuery('localizatorLanguage');
+            $q->where(array(
+                array('http_host' => $find),
+                array('OR:http_host:=' => $host . '/'),
+                array('OR:http_host:=' => $host),
+            ));
+            $q->sortby("FIELD(http_host, '{$find}', '{$host}/', '{$host}')");
+            $language = $this->modx->getObject('localizatorLanguage', $q);
+        }
+
+        if ($language) {
+            if (preg_match("/^(http(s):\/\/)/i", $language->http_host)) {
                 $site_url = $language->http_host;
             }
             else
@@ -366,15 +392,71 @@ class localizator
             $this->modx->setPlaceholders(array(
                 'localizator_key' => $language->key,
                 'cultureKey' => $cultureKey,
-                //'site_url' => $_SERVER['REQUEST_SCHEME'] . '://' . $language->http_host,
                 'site_url' => $site_url,
                 'base_url' => $base_url,
             ), '+');
 
             $this->modx->lexicon->load($cultureKey . ':localizator:site');
-
-            return true;
         }
+
+        $this->invokeEvent('OnFindLocalization', array(
+            'language' => $language,
+            'http_host' => $http_host,
+            'request' => $request,
+        ));
+
         return false;
+    }
+
+    function findResource($request){
+        $resourceId = false;
+
+        $this->invokeEvent('OnFindLocalizatorResource', array(
+            'resource' => &$resourceId,
+            'request' => $request,
+        ));
+
+        if (!$resourceId) {
+            $resourceId = $this->modx->findResource($request);
+        }
+
+        return $resourceId;
+    }
+
+
+    /**
+     * Shorthand for original modX::invokeEvent() method with some useful additions.
+     *
+     * @param $eventName
+     * @param array $params
+     * @param $glue
+     *
+     * @return array
+     */
+    public function invokeEvent($eventName, array $params = array(), $glue = '<br/>')
+    {
+        if (isset($this->modx->event->returnedValues)) {
+            $this->modx->event->returnedValues = null;
+        }
+
+        $response = $this->modx->invokeEvent($eventName, $params);
+        if (is_array($response) && count($response) > 1) {
+            foreach ($response as $k => $v) {
+                if (empty($v)) {
+                    unset($response[$k]);
+                }
+            }
+        }
+
+        $message = is_array($response) ? implode($glue, $response) : trim((string)$response);
+        if (isset($this->modx->event->returnedValues) && is_array($this->modx->event->returnedValues)) {
+            $params = array_merge($params, $this->modx->event->returnedValues);
+        }
+
+        return array(
+            'success' => empty($message),
+            'message' => $message,
+            'data' => $params,
+        );
     }
 }

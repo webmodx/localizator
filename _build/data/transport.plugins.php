@@ -13,7 +13,7 @@ $tmp = array(
             'OnMODXInit' => array(),
             'OnHandleRequest' => array(),
             'OnPageNotFound' => array(),
-            'OnLoadWebDocument' => array(),
+            'OnLoadWebDocument' => array('priority' => 10),
             'OnDocFormSave' => array(),
             'OnEmptyTrash' => array(),
             'mse2OnBeforeSearchIndex' => array(),
