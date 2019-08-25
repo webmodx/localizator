@@ -1,25 +1,27 @@
 # localizator
-MODx Revolution component for multilanguage sites with auto translate
 
+Языковые версии \ сателиты без контекстов, с автоматическим переводом всех полей ресурса + сео, да еще и автоперевод лексиконов — это все в дополнении localizator.
 
 header.tpl
-```
+
+``` php
 {'!Localizator' | snippet : [
-'snippet' => 'pdoMenu',
-'parents' => 0,
-'level' => 2,
-'startId' => 0,
-'tplParentRow' => '@INLINE
-<li class="[[+classnames]] dropdown">
-<a href="#" class="dropdown-toggle" data-toggle="dropdown" [[+attributes]]>[[+menutitle]]<b class="caret"></b></a>
-<ul class="dropdown-menu">{$wrapper}</ul>
-</li>'
-'tplOuter' => '@INLINE {$wrapper}'
+  'snippet' => 'pdoMenu',
+  'parents' => 0,
+  'level' => 2,
+  'startId' => 0,
+  'tplParentRow' => '@INLINE
+  <li class="[[+classnames]] dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" [[+attributes]]>[[+menutitle]]<b class="caret"></b></a>
+  <ul class="dropdown-menu">{$wrapper}</ul>
+  </li>'
+  'tplOuter' => '@INLINE {$wrapper}'
 ]}
 ```
 
 main.tpl
-```
+
+``` php
 <h1>{$_modx->resource.longtitle ?: $_modx->resource.pagetitle}</h1>
 
 
@@ -51,7 +53,8 @@ main.tpl
 ```
 
 getLanguages snippet 
-```
+
+``` php
 <?php
 $output = "";
 
