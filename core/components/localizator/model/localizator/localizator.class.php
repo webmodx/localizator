@@ -86,15 +86,15 @@ class localizator
 		return $output;
 	}
 
-	function createForm(&$tabs, &$record, &$allfields, &$categories, $scriptProperties) {
+	function createForm(&$formtabs, &$record, &$allfields, &$categories, $scriptProperties) {
 
         $input_prefix = $this->modx->getOption('input_prefix', $scriptProperties, '');
         $input_prefix = !empty($input_prefix) ? $input_prefix . '_' : '';
         $rte = isset($scriptProperties['which_editor']) ? $scriptProperties['which_editor'] : $this->modx->getOption('which_editor', '', $this->modx->_userConfig);
         
 
-        foreach ($tabs as $tabid => $subtab) {
-            $tabs =array();
+        foreach ($formtabs as $tabid => $subtab) {
+            $tabs = array();
             foreach ($subtab['tabs'] as $subtabid => $tab) {
                 $tvs = array();
                 $fields = $this->modx->getOption('fields', $tab, array());

@@ -1,5 +1,10 @@
 Changelog for localizator.
 
+1.0.6-beta
+==============
+- Fixed TV tabs
+- Added events
+
 1.0.5-beta1
 ==============
 - Fixed processTVs
