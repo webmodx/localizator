@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="30410937-99d3-4014-9038-1d52bc470da3" name="mybeget" url="http://modxhelp.ru">
-        <fileTransfer host="nizart2n.beget.tech" port="21" rootFolder="/nizart2n.beget.tech/public_html/">
+      <webServer id="30410937-99d3-4014-9038-1d52bc470da3" name="mybeget" url="http://localizator.modx.online">
+        <fileTransfer host="nizart2n.beget.tech" port="21" rootFolder="/localizator.modx.online/public_html/">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>

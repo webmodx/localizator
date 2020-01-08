@@ -3,6 +3,25 @@
 /* @var localizator $localizator */
 $localizator = $modx->getService('localizator');
 switch($modx->event->name) {
+    case 'OnTVFormPrerender':
+        $modx->controller->addLexiconTopic('localizator:default');
+        $modx->controller->addHtml('
+            <script type="text/javascript">
+                Ext.ComponentMgr.onAvailable("modx-tv-form", function(config) {
+                    console.log(config, this.items[1].items[1].items);
+                    this.items[1].items[1].items.push({
+                        xtype: "xcheckbox"
+                        ,boxLabel: _("tv_lock")
+                        ,description: _("tv_lock_msg")
+                        ,name: "locked2"
+                        ,id: "modx-tv-locked2"
+                        ,inputValue: 1
+                        //,checked22: config.record.locked || false
+                    });
+                });
+            </script>
+            ');
+        break;
     case 'OnDocFormPrerender':
         if ($mode == 'upd'){
             $modx->controller->addLexiconTopic('localizator:default');

@@ -9,6 +9,7 @@ $tmp = array(
         'file' => 'localizator',
         'description' => '',
         'events' => array(
+            'OnTVFormPrerender' => array(),
             'OnDocFormPrerender' => array(),
             'OnMODXInit' => array(),
             'OnHandleRequest' => array(),
