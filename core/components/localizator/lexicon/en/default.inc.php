@@ -66,3 +66,6 @@ $_lang['localizator_grid_search'] = 'Search';
 $_lang['localizator_grid_actions'] = 'Actions';
 
 $_lang['localizator_content_err_ae'] = 'Localization of the resource is already filled';
+
+$_lang['tv_localizator_enabled'] = 'TV is available in localizations';
+$_lang['tv_localizator_enabled_msg'] = 'Template Var is available for editing in localizations.';

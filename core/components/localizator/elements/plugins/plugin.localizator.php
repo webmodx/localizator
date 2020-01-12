@@ -7,16 +7,17 @@ switch($modx->event->name) {
         $modx->controller->addLexiconTopic('localizator:default');
         $modx->controller->addHtml('
             <script type="text/javascript">
-                Ext.ComponentMgr.onAvailable("modx-tv-form", function(config) {
-                    console.log(config, this.items[1].items[1].items);
-                    this.items[1].items[1].items.push({
-                        xtype: "xcheckbox"
-                        ,boxLabel: _("tv_lock")
-                        ,description: _("tv_lock_msg")
-                        ,name: "locked2"
-                        ,id: "modx-tv-locked2"
-                        ,inputValue: 1
-                        //,checked22: config.record.locked || false
+                Ext.ComponentMgr.onAvailable("modx-panel-tv", function(config) {
+                    Ext.ComponentMgr.onAvailable("modx-tv-form", function() {
+                        this.items[1].items[1].items.push({
+                            xtype: "xcheckbox"
+                            ,boxLabel: _("tv_localizator_enabled")
+                            ,description: _("tv_localizator_enabled_msg")
+                            ,name: "localizator_enabled"
+                            ,id: "modx-tv-localizator_enabled"
+                            ,inputValue: 1
+                            ,checked: config.record.localizator_enabled || false
+                        });
                     });
                 });
             </script>
@@ -55,6 +56,20 @@ switch($modx->event->name) {
         break;
 
     case 'OnMODXInit':
+        $include = include_once($localizator->config['modelPath'] . 'localizator/plugin.mysql.inc.php');
+        if (is_array($include)) {
+            foreach ($include as $class => $map){
+                if (!isset($modx->map[$class])) {
+                    $modx->loadClass($class);
+                }
+                if (isset($modx->map[$class])) {
+                    foreach ($map as $key => $values) {
+                        $modx->map[$class][$key] = array_merge($modx->map[$class][$key], $values);
+                    }
+                }
+            }
+        }
+
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
         if ($modx->getOption('friendly_urls') && $isAjax && isset($_SERVER['HTTP_REFERER'])){
             $referer = parse_url($_SERVER['HTTP_REFERER']);

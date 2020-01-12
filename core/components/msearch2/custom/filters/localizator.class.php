@@ -10,39 +10,6 @@ class mse2LocalizatorFilter extends mse2FiltersHandler {
 	 * @return array Array with tvs values as keys and resources ids as values
 	 */
 	public function getTvValues(array $tvs, array $ids) {
-		$localizatorTVs = array();
-        $fields_in = $fields_out = array();
-        $fields = $this->modx->getOption('localizator_tv_fields', null, false, true);
-        if ($tmp = $this->modx->getObject('modContextSetting', array('key' => 'localizator_tv_fields', 'context_key' => $this->config['ctx']))) {
-            $fields = $tmp->get('value');
-        }
-
-        if ($fields) {
-            $fields = array_map('trim', explode(',', $fields));
-
-            foreach ($fields as $v) {
-                if (is_numeric($v)) {
-                    continue;
-                }
-                
-                if ($v[0] == '-') {
-                    $fields_out[] = substr($v, 1);
-                }
-                else{
-                    $fields_in[] = $v;
-                }
-            }
-        }
-
-        foreach ($tvs as $tv){
-            if (in_array($tv, $fields_out)) continue;
-            if (!empty($fields_in) && !in_array($tv, $fields_in)) continue;
-
-            $localizatorTVs[] = $tv;
-        }
-        //$tvs = array_diff($tvs, $localizatorTVs);
-
-
 		$filters = $results = array();
 
 		$q = $this->modx->newQuery('modResource', array('modResource.id:IN' => $ids));
@@ -57,7 +24,20 @@ class mse2LocalizatorFilter extends mse2FiltersHandler {
 			'locTemplateVarResource.contentid = modResource.id',
 			'locTemplateVarResource.key:=' => $this->modx->getOption('localizator_key', $this->config, $this->modx->localizator_key, true),
 		));
-		$q->select('TemplateVar.name, TemplateVarResource.contentid as id, TemplateVarResource.value, locTemplateVarResource.value loc_value, TemplateVar.type, TemplateVar.default_text');
+		$q->select('TemplateVar.name, 
+		            IF(
+                        (TemplateVar.localizator_enabled = 1),
+                        locTemplateVarResource.value,
+                        TemplateVarResource.value
+                    ) value,
+		            IF(
+                        (TemplateVar.localizator_enabled = 1),
+                        locTemplateVarResource.contentid,
+                        TemplateVarResource.contentid
+                    ) id,
+		            TemplateVar.type, 
+		            TemplateVar.default_text
+		');
 		$tstart = microtime(true);
 		if ($q->prepare() && $q->stmt->execute()) {
 			$this->modx->queryTime += microtime(true) - $tstart;
@@ -65,9 +45,6 @@ class mse2LocalizatorFilter extends mse2FiltersHandler {
 			while ($row = $q->stmt->fetch(PDO::FETCH_ASSOC)) {
 				if (empty($row['id'])) {
 					continue;
-				}
-				elseif (in_array($row['name'], $localizatorTVs)){
-					$row['value'] = $row['loc_value'];
 				}
 				if (is_null($row['value']) || trim($row['value']) == '') {
 					$row['value'] = $row['default_text'];

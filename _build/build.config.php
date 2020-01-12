@@ -52,4 +52,5 @@ $BUILD_RESOLVERS = array(
     'tables',
     'weblink',
     'policy',
+    'upgrade',
 );

@@ -10,15 +10,26 @@ class pdoFetchLocalizator extends pdoFetch
     {
         parent::addTVs();
 
-        if (isset($this->config['localizatorTVs']) && !empty($this->config['localizatorTVs']) && $this->config['tvsJoin']){
-        	foreach ($this->config['localizatorTVs'] as $name){
+        if ($this->config['tvsJoin']) {
+            $this->config['localizator_key'] = $this->modx->getOption('localizator_key', $this->config, $this->modx->getOption('localizator_key', null), true);
+            $this->config['localizatorTVs'] = array();
+            $q = $this->modx->newQuery('modTemplateVar')
+                ->where(array(
+                    'name:IN' => array_keys($this->config['tvsJoin']),
+                    'localizator_enabled' => 1,
+                ))
+                ->select('name');
+            if ($q->prepare() && $q->stmt->execute()) {
+                $this->config['localizatorTVs'] = $q->stmt->fetchAll(PDO::FETCH_COLUMN);
+            }
+            foreach ($this->config['localizatorTVs'] as $name){
                 $name = strtolower($name);
                 $alias = 'TV' . $name;
-        		if (isset($this->config['tvsJoin'][$name])){
-        			$this->config['tvsJoin'][$name]['class'] = 'locTemplateVarResource';
-        			$this->config['tvsJoin'][$name]['on'] .= " AND `{$alias}`.`key` = ".$this->modx->quote($this->config['localizator_key']);
-        		}
-        	}
+                if (isset($this->config['tvsJoin'][$name])){
+                    $this->config['tvsJoin'][$name]['class'] = 'locTemplateVarResource';
+                    $this->config['tvsJoin'][$name]['on'] .= " AND `{$alias}`.`key` = ".$this->modx->quote($this->config['localizator_key']);
+                }
+            }
         }
     }
     /**
@@ -30,6 +41,8 @@ class pdoFetchLocalizator extends pdoFetch
      */
     public function prepareRows(array $rows = array())
     {
+        $time = microtime(true);
+
         if (isset($this->config['localizatorTVs']) && !empty($this->config['localizatorTVs']) && 
             (!empty($this->config['includeTVs']) && (!empty($this->config['prepareTVs']) || !empty($this->config['processTVs'])))
         ){

@@ -66,3 +66,6 @@ $_lang['localizator_grid_search'] = 'Поиск';
 $_lang['localizator_grid_actions'] = 'Действия';
 
 $_lang['localizator_content_err_ae'] = 'Локализация ресурса уже заполнена';
+
+$_lang['tv_localizator_enabled'] = 'TV доступно в локализациях';
+$_lang['tv_localizator_enabled_msg'] = 'Дополнительное поле доступно для редактирования в локализациях';
