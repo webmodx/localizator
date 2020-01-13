@@ -18,6 +18,7 @@ $tmp = array(
             'OnDocFormSave' => array(),
             'OnEmptyTrash' => array(),
             'mse2OnBeforeSearchIndex' => array(),
+            'pdoToolsOnFenomInit' => array(),
         )
     )
 );

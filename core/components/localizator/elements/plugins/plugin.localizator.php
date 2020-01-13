@@ -205,4 +205,64 @@ switch($modx->event->name) {
             }
         }
         break;
+
+    case 'pdoToolsOnFenomInit':
+        /** @var Fenom $fenom */
+        $pdo = $modx->getService('pdoTools');
+
+        $fenom->addModifier('locfield', function ($id, $field = null) use ($pdo, $modx) {
+            /** @var modResource $resource */
+            if (empty($id)) {
+                $resource = $modx->resource;
+            } elseif (!is_numeric($id)) {
+                $field = $id;
+                $resource = $modx->resource;
+            } elseif (!$resource = $pdo->getStore($id, 'resource')) {
+                $resource = $modx->getObject('modResource', $id);
+                $pdo->setStore($id, $resource, 'resource');
+            }
+
+            if (!$resource)
+                return '';
+
+            $id = $resource->get('id');
+            $key = $modx->localizator_key;
+            $output = '';
+
+            if (in_array($field, array_diff(array_keys($modx->getFields('localizatorContent')), array('id', 'resource_id')))){
+                $q = $modx->newQuery("localizatorContent")
+                    ->where(array(
+                        "resource_id" => $id,
+                        "key" => $key,
+                    ))
+                    ->select($field);
+                if ($q->prepare() && $q->stmt->execute()){
+                    $output = $q->stmt->fetchColumn();
+                }
+            }
+            elseif (in_array($field, array_keys($modx->getFields('modResource')))){
+                $output = $resource->get($field);
+            }
+            elseif ($tv = $modx->getObject('modTemplateVar', array('name' => $field))){
+                if ($tv->get('localizator_enabled')){
+                    $q = $modx->newQuery("locTemplateVarResource")
+                        ->where(array(
+                            "contentid" => $id,
+                            "key" => $key,
+                            "tmplvarid" => $tv->get('id'),
+                        ))
+                        ->select('value');
+                    if ($q->prepare() && $q->stmt->execute()){
+                        if ($output = $q->stmt->fetchColumn()){
+                            $output = localizatorContent::renderTVOutput($modx, $tv, $output, $id);
+                        }
+                    }
+                }
+                else{
+                    $output = $resource->getTVValue($field);
+                }
+            }
+            return $output;
+        });
+        break;
 }
