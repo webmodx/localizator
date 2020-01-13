@@ -82,7 +82,7 @@ if ($transport->xpdo) {
                 }
             }
 
-            $c = $modx->newQuery('modResource');
+            $c = $modx->newQuery('modTemplateVar');
             $c->command('update');
             $c->set(array(
                 'localizator_enabled' => 1
