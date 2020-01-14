@@ -74,6 +74,7 @@ if ($transport->xpdo) {
                     }
                 }
             }
+
             break;
 
         case xPDOTransport::ACTION_UNINSTALL:

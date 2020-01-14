@@ -9,6 +9,7 @@ $tmp = array(
         'file' => 'localizator',
         'description' => '',
         'events' => array(
+            'OnTVFormPrerender' => array(),
             'OnDocFormPrerender' => array(),
             'OnMODXInit' => array(),
             'OnHandleRequest' => array(),
@@ -17,6 +18,7 @@ $tmp = array(
             'OnDocFormSave' => array(),
             'OnEmptyTrash' => array(),
             'mse2OnBeforeSearchIndex' => array(),
+            'pdoToolsOnFenomInit' => array(),
         )
     )
 );

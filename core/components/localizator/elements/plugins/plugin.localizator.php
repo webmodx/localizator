@@ -3,6 +3,26 @@
 /* @var localizator $localizator */
 $localizator = $modx->getService('localizator');
 switch($modx->event->name) {
+    case 'OnTVFormPrerender':
+        $modx->controller->addLexiconTopic('localizator:default');
+        $modx->controller->addHtml('
+            <script type="text/javascript">
+                Ext.ComponentMgr.onAvailable("modx-panel-tv", function(config) {
+                    Ext.ComponentMgr.onAvailable("modx-tv-form", function() {
+                        this.items[1].items[1].items.push({
+                            xtype: "xcheckbox"
+                            ,boxLabel: _("tv_localizator_enabled")
+                            ,description: _("tv_localizator_enabled_msg")
+                            ,name: "localizator_enabled"
+                            ,id: "modx-tv-localizator_enabled"
+                            ,inputValue: 1
+                            ,checked: config.record.localizator_enabled || false
+                        });
+                    });
+                });
+            </script>
+            ');
+        break;
     case 'OnDocFormPrerender':
         if ($mode == 'upd'){
             $modx->controller->addLexiconTopic('localizator:default');
@@ -36,6 +56,20 @@ switch($modx->event->name) {
         break;
 
     case 'OnMODXInit':
+        $include = include_once($localizator->config['modelPath'] . 'localizator/plugin.mysql.inc.php');
+        if (is_array($include)) {
+            foreach ($include as $class => $map){
+                if (!isset($modx->map[$class])) {
+                    $modx->loadClass($class);
+                }
+                if (isset($modx->map[$class])) {
+                    foreach ($map as $key => $values) {
+                        $modx->map[$class][$key] = array_merge($modx->map[$class][$key], $values);
+                    }
+                }
+            }
+        }
+
         $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
         if ($modx->getOption('friendly_urls') && $isAjax && isset($_SERVER['HTTP_REFERER'])){
             $referer = parse_url($_SERVER['HTTP_REFERER']);
@@ -170,5 +204,65 @@ switch($modx->event->name) {
                 }
             }
         }
+        break;
+
+    case 'pdoToolsOnFenomInit':
+        /** @var Fenom $fenom */
+        $pdo = $modx->getService('pdoTools');
+
+        $fenom->addModifier('locfield', function ($id, $field = null) use ($pdo, $modx) {
+            /** @var modResource $resource */
+            if (empty($id)) {
+                $resource = $modx->resource;
+            } elseif (!is_numeric($id)) {
+                $field = $id;
+                $resource = $modx->resource;
+            } elseif (!$resource = $pdo->getStore($id, 'resource')) {
+                $resource = $modx->getObject('modResource', $id);
+                $pdo->setStore($id, $resource, 'resource');
+            }
+
+            if (!$resource)
+                return '';
+
+            $id = $resource->get('id');
+            $key = $modx->localizator_key;
+            $output = '';
+
+            if (in_array($field, array_diff(array_keys($modx->getFields('localizatorContent')), array('id', 'resource_id')))){
+                $q = $modx->newQuery("localizatorContent")
+                    ->where(array(
+                        "resource_id" => $id,
+                        "key" => $key,
+                    ))
+                    ->select($field);
+                if ($q->prepare() && $q->stmt->execute()){
+                    $output = $q->stmt->fetchColumn();
+                }
+            }
+            elseif (in_array($field, array_keys($modx->getFields('modResource')))){
+                $output = $resource->get($field);
+            }
+            elseif ($tv = $modx->getObject('modTemplateVar', array('name' => $field))){
+                if ($tv->get('localizator_enabled')){
+                    $q = $modx->newQuery("locTemplateVarResource")
+                        ->where(array(
+                            "contentid" => $id,
+                            "key" => $key,
+                            "tmplvarid" => $tv->get('id'),
+                        ))
+                        ->select('value');
+                    if ($q->prepare() && $q->stmt->execute()){
+                        if ($output = $q->stmt->fetchColumn()){
+                            $output = localizatorContent::renderTVOutput($modx, $tv, $output, $id);
+                        }
+                    }
+                }
+                else{
+                    $output = $resource->getTVValue($field);
+                }
+            }
+            return $output;
+        });
         break;
 }

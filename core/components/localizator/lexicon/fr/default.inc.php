@@ -66,3 +66,6 @@ $_lang['localizator_grid_search'] = 'Rechercher';
 $_lang['localizator_grid_actions'] = 'Actions';
 
 $_lang['localizator_content_err_ae'] = 'La localisation de la ressource est déjà renseignée';
+
+$_lang['tv_localizator_enabled'] = 'TV est disponible dans les localisations';
+$_lang['tv_localizator_enabled_msg'] = 'TV est disponible pour modification dans les localisations.';

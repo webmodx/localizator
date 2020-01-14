@@ -1,5 +1,14 @@
 Changelog for localizator.
 
+1.0.7-beta
+==============
+- Fixed TV checkbox (9-issue)
+- Fixed content field (4-issue)
+- Added modifier "locfield"
+- Removed setting localizator_tv_fields
+- Added checkbox "TV is available in localizations" in TV settings
+- Fixed mse2LocalizatorFilter
+
 1.0.6-beta
 ==============
 - Fixed TV tabs

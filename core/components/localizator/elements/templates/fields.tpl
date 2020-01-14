@@ -39,6 +39,9 @@
                                 {$tv->get('formElement')}
                                
                             {elseif $tv->type NEQ "hidden"}
+                                {if $tv->type EQ "checkbox"}
+                                    <input type="hidden" name="tvlocalizator_{$tv->name}[]" value="" />
+                                {/if}
                                 <div class="x-form-item x-tab-item {cycle values=",alt"} modx-tv" id="tv{$tv->id}-tr" style="padding: 10px 0 0 ;{if $tv->display EQ "none"}display:none;{/if} ">
                                     <label for="tv{$tv->id}" class="x-form-item-label modx-tv-label" style="width: auto;margin-bottom:2px;">
                                         <div class="modx-tv-label-title"> 
@@ -54,8 +57,6 @@
                                         <input type="hidden" id="tvdef{$tv->id}" value="{$tv->default_text|escape}" />
                                         {$tv->get('formElement')}
                                     </div>
-
-                                    <!--<br class="clear" />-->
                                 </div>
                                 <script type="text/javascript">{literal}Ext.onReady(function() { new Ext.ToolTip({{/literal}target: 'tv{$tv->id}-caption',html: '[[*{$tv->name}]]'{literal}});});{/literal}</script>
                             {else}

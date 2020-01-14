@@ -11,10 +11,6 @@ $tmp = array(
         'type' => 'textfield',
         'value' => 'modResource',
     ),
-    'localizatorTVs' => array(
-        'type' => 'textfield',
-        'value' => '',
-    ),
     'localizator_key' => array(
         'type' => 'textfield',
         'value' => '',

@@ -70,34 +70,9 @@ class localizatorContent extends xPDOSimpleObject {
             'tvtpl.templateid' => $resource->get('template'),
         ));
         $c->groupby('modTemplateVar.id');
-
-        if ($fields = $content->xpdo->getOption('localizator_tv_fields', null, false, true)) {
-            $fields = array_map('trim', explode(',', $fields));
-
-            $where = $fields_in = $fields_out = array();
-            foreach ($fields as $v) {
-                if (is_numeric($v)) {
-                    continue;
-                }
-                
-                if ($v[0] == '-') {
-                    $fields_out[] = substr($v, 1);
-                }
-                else{
-                    $fields_in[] = $v;
-                }
-            }
-
-            if (!empty($fields_in)) {
-                $where['modTemplateVar.name:IN'] = $fields_in;
-            }
-            if (!empty($fields_out)) {
-                $where['modTemplateVar.name:NOT IN'] = $fields_out;
-            }
-            if (!empty($where)){
-                $c->where($where);
-            }
-        }
+        $c->where(array(
+            'modTemplateVar.localizator_enabled' => 1,
+        ));
 
         return $c;
     }
