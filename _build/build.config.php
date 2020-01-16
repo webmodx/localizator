@@ -53,4 +53,5 @@ $BUILD_RESOLVERS = array(
     'weblink',
     'policy',
     'upgrade',
+    'lexicon',
 );

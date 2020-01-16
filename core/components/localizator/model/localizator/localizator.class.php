@@ -396,7 +396,21 @@ class localizator
                 'base_url' => $base_url,
             ), '+');
 
-            $this->modx->lexicon->load($cultureKey . ':localizator:site');
+            $lexiconDir = $this->config['corePath'] . "lexicon/{$cultureKey}/";
+            if (file_exists($lexiconDir)){
+                foreach (array_diff(scandir($lexiconDir), array(
+                    '.',
+                    '..',
+                    'default.inc.php',
+                    'permissions.inc.php',
+                    'properties.inc.php',
+                )) as $file){
+                    if (preg_match('/.*?\.inc\.php$/i', $file)) {
+                        $this->modx->lexicon->load($cultureKey . ':localizator:' . str_replace('.inc.php','', $file));
+                    }
+                }
+            }
+
         }
 
         $this->invokeEvent('OnFindLocalization', array(

@@ -6,12 +6,12 @@ class localizatorLexiconGetLanguagesProcessor extends modProcessor {
 		$list = array();
 		$languages = $this->modx->getIterator('localizatorLanguage');
 		foreach($languages as $language) {
-			$list[] = array(
+			$list[$language->cultureKey] = array(
 				'name' => ($language->cultureKey ?: $language->key),
 			);
 		}
 
-		return $this->outputArray($list, count($list));
+		return $this->outputArray(array_values($list), count($list));
     }
 
 }
