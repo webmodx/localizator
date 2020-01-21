@@ -96,6 +96,9 @@ if ($transport->xpdo) {
                 'key' => 'localizator_tv_fields'
             ));
 
+            $localizator = $modx->getService('localizator');
+            $localizator->updateFormCustomizationProfile();
+
             break;
 
         case xPDOTransport::ACTION_UNINSTALL:

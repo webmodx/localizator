@@ -265,4 +265,8 @@ switch($modx->event->name) {
             return $output;
         });
         break;
+
+    case 'OnTemplateVarSave':
+        $localizator->updateFormCustomizationProfile();
+        break;
 }

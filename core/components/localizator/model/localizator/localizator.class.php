@@ -473,4 +473,88 @@ class localizator
             'data' => $params,
         );
     }
+
+    public function updateFormCustomizationProfile()
+    {
+        if (!$profile = $this->modx->getObject('modFormCustomizationProfile', array('name' => 'Localizator'))){
+            $profile = $this->modx->newObject('modFormCustomizationProfile');
+            $profile->fromArray(array(
+                'name' => 'Localizator',
+                'active' => 1,
+            ));
+            $profile->save();
+        }
+
+        $fields = array_diff(array_keys($this->modx->getFields('localizatorContent')), array('pagetitle', 'id', 'key', 'resource_id', 'active', 'seotitle', 'keywords'));
+        $q = $this->modx->newQuery('modTemplateVar')
+            ->where(array(
+                'localizator_enabled' => 1
+            ))
+            ->select('id');
+        if ($q->prepare() && $q->stmt->execute()){
+            while ($tvid = $q->stmt->fetchColumn()){
+                $fields[] = "tv{$tvid}";
+            }
+        }
+        $descendants = $this->modx->getDescendants('modResource');
+        foreach ($descendants as $descendant) {
+            if (in_array($descendant, array('modXMLRPCResource', 'modStaticResource', 'modSymLink', 'modWebLink'))) continue;
+
+            /** @var xPDOObject|modResource $obj */
+            $obj = $this->modx->newObject($descendant);
+            if (!$obj) continue;
+
+            if (!$obj->allowListingInClassKeyDropdown) continue;
+
+            if (!$set = $this->modx->getObject('modFormCustomizationSet', array(
+                'profile'           => $profile->get('id'),
+                'action'            => 'resource/*',
+                'constraint_field'  => 'class_key',
+                'constraint'        => $descendant,
+                'constraint_class'  => 'modResource',
+            ))){
+                /** @var xPDOObject|modFormCustomizationSet $set */
+                $set = $this->modx->newObject('modFormCustomizationSet');
+                $set->fromArray(array(
+                    'profile'           => $profile->get('id'),
+                    'action'            => 'resource/*',
+                    'constraint_field'  => 'class_key',
+                    'constraint'        => $descendant,
+                    'constraint_class'  => 'modResource',
+                    'active'            => 1,
+                ));
+                $set->save();
+            }
+
+            $oldRules = $this->modx->getCollection('modActionDom',array(
+                'set' => $set->get('id'),
+            ));
+            /** @var modActionDom $oldRule */
+            foreach ($oldRules as $oldRule) {
+                $oldRule->remove();
+            }
+
+            foreach ($fields as $field) {
+                $isTV = (strpos($field, 'tv') === 0);
+                if ($field == 'content')
+                    $field = 'modx-resource-content';
+                $rule = $this->modx->newObject('modActionDom');
+                $rule->set('set', $set->get('id'));
+                $rule->set('action', $set->get('action'));
+                $rule->set('name', $field);
+                $rule->set('container', 'modx-panel-resource');
+                $rule->set('rule', $isTV ? 'tvVisible' : 'fieldVisible');
+                $rule->set('value', 0);
+                $rule->set('constraint_class', $set->get('constraint_class'));
+                $rule->set('constraint_field', $set->get('constraint_field'));
+                $rule->set('constraint', $set->get('constraint'));
+                $rule->set('active', true);
+                $rule->set('rank', $isTV ? 12 : 5);
+                $rule->save();
+            }
+        }
+
+
+
+    }
 }
