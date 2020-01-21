@@ -328,17 +328,19 @@ MODx.window.UpdatLocalizatorItem = function(config) {
     Ext.applyIf(config,{
         title:_('localizator_item_update')
         ,id: 'modx-window-localizator-item-content'
-        ,width: '1000'
+        ,width: 1000
 		,closeAction: 'hide'
         ,shadow: false
         ,resizable: true
         ,collapsible: true
         ,maximizable: true
         ,allowDrop: true
-        ,height: '600'
+        ,height: 600
         //,saveBtnText: _('done')
         ,forceLayout: true
-        ,boxMaxHeight: '700'
+        ,defaults: {
+            autoWidth: true
+        }
         ,autoScroll: true
         ,buttons: [{
             text: config.cancelBtnText || _('cancel')
@@ -362,7 +364,7 @@ MODx.window.UpdatLocalizatorItem = function(config) {
         success: true
         ,failure: true
         ,beforeSubmit: true
-		,hide:true
+        ,hide:true
 		//,show:true
     });
     this._loadForm();	
@@ -467,7 +469,6 @@ MODx.panel.LocalizatorWindowPanel = function(config) {
         ,bodyStyle: 'padding: 5px;'
         //,autoSize: true
         ,autoLoad: this.autoload(config)
-        ,width: '950'
         ,listeners: {
 			'load': {fn:this.load,scope:this}
         }		
@@ -516,7 +517,6 @@ Ext.extend(MODx.panel.LocalizatorWindowPanel,MODx.FormPanel,{
                 }
             }
         }
-        
         this.popwindow.width='1000px';
 		this.width='1000px';
 		this.syncSize();

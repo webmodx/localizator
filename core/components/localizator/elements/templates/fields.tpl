@@ -122,11 +122,12 @@
                 ,autoTabs: true
                 ,border: false
                 ,plain: true
-                ,width: '98%'
+                ,anchor: '100%'
                 ,hideMode: 'offsets'
                 ,defaults: {
                     bodyStyle: 'padding: 5px;'
                     ,autoHeight: true
+                    ,autoWidth: true
                 }
                 ,deferredRender: false
             });
