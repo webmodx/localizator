@@ -7,10 +7,10 @@ $_lang['setting_localizator_default_language'] = 'The default localization key';
 $_lang['setting_localizator_default_language_desc'] = 'Key localization for primary language version';
 
 $_lang['setting_localizator_key_yandex'] = 'API key for Yandex';
-$_lang['setting_localizator_key_yandex_desc'] = 'API key for Yandex translator, https://translate.yandex.ru/developers/keys';
+$_lang['setting_localizator_key_yandex_desc'] = 'API key for Yandex translator, <a href="https://tech.yandex.ru/keys/get/?service=trnsl" target="_blank">API key</a>';
 
 $_lang['setting_localizator_default_translator'] = 'Translator automatic translation';
-$_lang['setting_localizator_key_yandex_desc'] = 'So far available only to Yandex';
+$_lang['setting_localizator_default_translator_desc'] = 'So far available only to Yandex';
 
 $_lang['setting_localizator_translate_translated'] = 'Complement translated localization?';
 $_lang['setting_localizator_translate_translated_desc'] = 'When you use automatic translation translate blank fields from existing localisations';
