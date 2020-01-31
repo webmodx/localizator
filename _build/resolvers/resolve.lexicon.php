@@ -8,16 +8,35 @@ if ($transport->xpdo) {
     switch ($options[xPDOTransport::PACKAGE_ACTION]) {
         case xPDOTransport::ACTION_INSTALL:
         case xPDOTransport::ACTION_UPGRADE:
-            $path = MODX_CORE_PATH . 'components/localizator/lexicon/';
-            if (file_exists($path)) {
-                foreach (array_diff(scandir($path), array('..', '.')) as $dir){
-                    if (!is_dir($path . $dir))
+            $corePath = $modx->getOption('localizator_core_path', null,
+                $modx->getOption('core_path') . 'components/localizator/');
+            $modelPath = $corePath . 'model/';
+            $modx->addPackage('localizator', $modelPath);
+
+            $lexiconPath = $corePath . 'lexicon/';
+
+            if (file_exists($lexiconPath)) {
+
+                $q = $modx->newQuery('localizatorLanguage')
+                    ->groupby('cultureKey')
+                    ->select('cultureKey');
+
+                if ($q->prepare() && $q->stmt->execute()){
+                    while ($dir = $q->stmt->fetchColumn()){
+                        if (!file_exists($lexiconPath . $dir)){
+                            mkdir($lexiconPath . $dir, 0755, true);
+                        }
+                    }
+                }
+
+                foreach (array_diff(scandir($lexiconPath), array('..', '.')) as $dir){
+                    if (!is_dir($lexiconPath . $dir))
                         continue;
 
-                    if (file_exists($path . $dir . '/site.inc.php'))
+                    if (file_exists($lexiconPath . $dir . '/site.inc.php'))
                         continue;
 
-                    file_put_contents($path . $dir . '/site.inc.php', "<?php\n\n\$_lang['test'] = 'Test';");
+                    file_put_contents($lexiconPath . $dir . '/site.inc.php', "<?php\n\n\$_lang['test'] = 'Test {$dir}';");
                 }
             }
             break;
