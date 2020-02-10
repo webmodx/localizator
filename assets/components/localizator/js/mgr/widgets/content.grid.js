@@ -15,10 +15,12 @@ localizator.grid.Content = function (config) {
 			resource_id: config.resource_id,
         },
         listeners: {
+            /*
             rowDblClick: function (grid, rowIndex, e) {
                 var row = grid.store.getAt(rowIndex);
                 this.updateItem(grid, e, row);
             }
+            */
         },
         viewConfig: {
             forceFit: true,
@@ -181,22 +183,26 @@ Ext.extend(localizator.grid.Content, MODx.grid.Grid, {
             dataIndex: '_key',
             sortable: true,
             width: 200,
+            editor: {xtype: 'localizator-combo-language', name: '_key'},
         }, {
             header: _('localizator_pagetitle'),
             dataIndex: 'pagetitle',
             sortable: true,
             width: 200,
+            editor: {xtype: 'textfield'},
         }, {
             header: _('localizator_seotitle'),
             dataIndex: 'seotitle',
             sortable: true,
             width: 200,
+            editor: {xtype: 'textfield'},
         }, {
             header: _('localizator_active'),
             dataIndex: 'active',
             renderer: localizator.utils.renderBoolean,
             sortable: true,
             width: 100,
+            editor: {xtype: 'combo-boolean', renderer: 'boolean'},
         }, {
             header: _('localizator_grid_actions'),
             dataIndex: 'actions',
