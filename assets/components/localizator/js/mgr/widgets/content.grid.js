@@ -37,6 +37,8 @@ localizator.grid.Content = function (config) {
         paging: true,
         remoteSort: true,
         autoHeight: true,
+        autosave: true,
+        save_action: 'mgr/content/updatefromgrid',
     });
     localizator.grid.Content.superclass.constructor.call(this, config);
 
