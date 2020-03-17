@@ -331,9 +331,9 @@ class localizator
         $language = null;
 
         $response = $this->invokeEvent('OnBeforeFindLocalization', array(
-            'language' => &$language,
+            'language'  => &$language,
             'http_host' => $http_host,
-            'request' => $request,
+            'request'   => $request,
         ));
         if (!$response['success']) {
             return $response['message'];
@@ -352,9 +352,9 @@ class localizator
             }
             $q = $this->modx->newQuery('localizatorLanguage');
             $q->where(array(
-                array('http_host' => $find),
-                array('OR:http_host:=' => $host . '/'),
-                array('OR:http_host:=' => $host),
+                array('http_host'       => $find),
+                array('OR:http_host:='  => $host . '/'),
+                array('OR:http_host:='  => $host),
             ));
             $q->sortby("FIELD(http_host, '{$find}', '{$host}/', '{$host}')");
             $language = $this->modx->getObject('localizatorLanguage', $q);
@@ -390,12 +390,13 @@ class localizator
             $this->modx->setOption('base_url', $base_url);
 
             $this->modx->setPlaceholders(array(
-                'localizator_key' => $language->key,
-                'cultureKey' => $cultureKey,
-                'site_url' => $site_url,
-                'base_url' => $base_url,
+                'localizator_key'   => $language->key,
+                'cultureKey'        => $cultureKey,
+                'site_url'          => $site_url,
+                'base_url'          => $base_url,
             ), '+');
 
+            $topics = [];
             $lexiconDir = $this->config['corePath'] . "lexicon/{$cultureKey}/";
             if (file_exists($lexiconDir)){
                 foreach (array_diff(scandir($lexiconDir), array(
@@ -406,17 +407,38 @@ class localizator
                     'properties.inc.php',
                 )) as $file){
                     if (preg_match('/.*?\.inc\.php$/i', $file)) {
-                        $this->modx->lexicon->load($cultureKey . ':localizator:' . str_replace('.inc.php','', $file));
+                        $topics[] = str_replace('.inc.php','', $file);
                     }
                 }
             }
 
+            $q = $this->modx->newQuery('modLexiconEntry')
+                ->where([
+                    'namespace'     =>  'localizator',
+                    'language'      =>  $cultureKey,
+                    'topic:NOT IN'  =>  array_merge([
+                        'default',
+                        'permissions',
+                        'properties',
+                    ], $topics),
+                ])
+                ->select('topic')
+                ->groupby('topic')
+            ;
+            if ($q->prepare() && $q->stmt->execute()){
+                if ($dbTopics = $q->stmt->fetchAll(PDO::FETCH_COLUMN)){
+                    $topics = array_merge($topics, $dbTopics);
+                }
+            }
+            foreach ($topics as $topic){
+                $this->modx->lexicon->load("{$cultureKey}:localizator:{$topic}");
+            }
         }
 
         $this->invokeEvent('OnFindLocalization', array(
-            'language' => $language,
+            'language'  => $language,
             'http_host' => $http_host,
-            'request' => $request,
+            'request'   => $request,
         ));
 
         return false;
